@@ -63,15 +63,15 @@ ficha_valida_arm:
         bhi     .else_fv_arm			// salta a else si es mayor o negativo
         add     r0, r0, r1, lsl #3		// multiplica por 8 (DIM)
         ldrb    r0, [r0, r2]			// carga tablero[f][c]
-        cmp     r0, #0
+        cmp     r0, #CASILLA_VACIA
         bne     .if_fv_arm				// si no es igual entra a if
 .else_fv_arm:
-        mov 	r0, #0
+        mov 	r0, #CASILLA_VACIA
         str     r0, [r3]
         bx      r14
 .if_fv_arm:
         mov     r1, #1					// r0 se devuelve (contiene ficha). Se escribe 1 en posicion valida.
-        str     r1, [r3, #0]
+        str     r1, [r3]
         bx      r14
 #################################################################################################################
 // patron_volteo_arm_arm:
@@ -280,8 +280,8 @@ patron_volteo_arm_thumb:
 	LDMDB	fp, {r4-r9, fp, sp, pc}
 elseif_pv_2:
     CMP     r7, #0			// devuelve el resulado segun el valor de longitud
-    MOVGT   r0, #1
-    MOVLE   r0, #0
+    MOVGT   r0, #PATRON_ENCONTRADO
+    MOVLE   r0, #NO_HAY_PATRON
 	LDMDB	fp, {r4-r9, fp, sp, pc}
 
 else_pv_2:					// else
@@ -302,9 +302,9 @@ ficha_valida_thumb:
         push    {r4}
         mov     r4, #7
         cmp     r4, r2			// IF c > DIM
-        bcc     .Elsethumb
+        bhi     .Elsethumb
         cmp     r4, r1			// IF f > DIM
-        bcc     .Elsethumb
+        bhi     .Elsethumb
         lsl     r4, r1, #3		// f * 8(DIM)
         add     r0, r0, r4		// tablero + r4
         ldrb    r4, [r0, r2]	// r4 = tablero + (f*8) + c
@@ -318,7 +318,7 @@ ficha_valida_thumb:
         bx		r14
 .Elsethumb:
         str     r4, [r3]		//r4 tiene 0
-        mov     r0, #0
+        mov     r0, #CASILLA_VACIA
         pop     {r4}
         bx		r14
 #################################################################################################################
@@ -327,9 +327,10 @@ ficha_valida_thumb:
 
 .data
 .equ DIM, 8
+.equ DIM-1, 7
 .equ CASILLA_VACIA, 0
-.equ CASILLA_LLENA, 1
-Pos_valida:	.space 4
+.equ PATRON_ENCONTRADO, 1
+.equ NO_HAY_PATRON, 0
 
 .end
 #        END
