@@ -58,19 +58,22 @@ ficha_valida_arm:
 	; r1= fila
 	; r2= columna
 	; r3 = posicion_valida
+		str	   	r4, [sp]!
 	    cmp     r2, #7					// se compara unsigned si son >7
         cmpls   r1, #7
         bhi     .else_fv_arm			// salta a else si es mayor o negativo
-        add     r0, r0, r1, lsl #3		// multiplica por 8 (DIM)
-        ldrb    r0, [r0, r2]			// carga tablero[f][c]
+        add     r4, r0, r1, lsl #3		// multiplica por 8 (DIM)
+        ldrb    r0, [r4, r2]			// carga tablero[f][c]
         cmp     r0, #0
         bne     .if_fv_arm				// si no es igual entra a if
 .else_fv_arm:
         str     r0, [r3, #0]			// r0 es 0(ficha), se escribe posicion valida. Se deuvelve 0.
+        ldr 	r4, [sp]!
         bx      r14
 .if_fv_arm:
-        mov     r0, #1					// r0 se devuelve (contiene ficha). Se escribe 1 en posicion valida.
-        str     r0, [r3, #0]
+        mov     r4, #1					// r0 se devuelve (contiene ficha). Se escribe 1 en posicion valida.
+        str     r4, [r3, #0]
+        ldr	   	r4, [sp]!
         bx      r14
 #################################################################################################################
 // patron_volteo_arm_arm:
@@ -81,8 +84,9 @@ ficha_valida_arm:
 //			 posicion de la ficha es valida y no es igual a color
 ######################################################################################################
 patron_volteo_arm_arm:
-
+	// sbr gurda registros, fp y lr
 	MOV	ip, sp
+
 	STMDB	sp!, {r4-r9, fp, ip, lr, pc}
 	SUB	fp, ip, #4
 	//espacio variable local
@@ -102,7 +106,7 @@ patron_volteo_arm_arm:
 	ADD r2, r3, r5
 	AND r2, r2, #255
 	SUB r3, fp, #32
-	MOV r6, r1				//guarda fa y fc
+	MOV r6, r1
 	MOV r9, r2
 	BL ficha_valida_arm
 	//r0 = casilla, r1 = dir(posicion)
@@ -155,47 +159,43 @@ else_pv:					// else
 ######################################################################################################
 patron_volteo_arm_c:
 
-	MOV	ip, sp
-	STMDB	sp!, {r4-r9, fp, ip, lr, pc}
-	SUB	fp, ip, #4
-	//espacio variable local
-	SUB sp, sp, #4
+		// sbr gurda registros, fp y lr
+	STMFD   sp!, {fp, lr}
+	MOV fp, sp
+	STMFD   sp!, {r4-r9}
 
 	//se guarda tablero y longitud para invocar a ficha_valida()
 	MOV r7, r1
 	MOV r8, r0
 
 	//saca los parametros SF SC de la pila
-	LDRB r4, [fp, #4]
-	LDRB r5, [fp, #8]
+	LDRB r4, [fp, #8]
+	LDRB r5, [fp, #12]
 
+	//ADD y llamada ficha valida
 	ADD r1, r2, r4
 	AND r1, r1, #255
 	ADD r2, r3, r5
 	AND r2, r2, #255
-	SUB r3, fp, #32
-	MOV r6, r1				//guarda fa y fc
+	LDR r3, =Pos_valida
+	MOV r6, r1
 	MOV r9, r2
 	BL ficha_valida
-	//r0 = casilla, r1 = dir(posicion)
-	//r7 = dir(longitud) ,r8 = tablero
 	//r0 = casilla, r1 = dir(posicion)
 	//r7 = dir(longitud) ,r8 = tablero
 	MOV r3, r9				//restarura parametros
 	MOV r2, r6
 	MOV r1, r7
-	LDR r6, [fp, #-32]			//posicion se utiliza luegi
-	//LDR r6, =Pos_valida
-	//LDR r6, [r6]
+	LDR r6, =Pos_valida			//posicion se utiliza luegi
 	//r0 = casilla, r1 = dir(longitud), r2 = FA, r3=C, r4=SF, r5=SC
 	//r6 = **, r7 = dir(longitud) ,r8 = tablero
-					// IF poscion valida = 1
+	LDR r6, [r6]				// IF poscion valida = 1
 	CMP r6, #1
-	BNE else_pv
-	LDRB r6, [fp, #12]			// cargamos color de la pila
+	BNE else_pv_1
+	LDRB r6, [fp, #16]			// cargamos color de la pila
 	LDR  r7, [r1]				// se carga *longitud (se utiliza despues)
 	CMP r6, r0					// IF color==casilla
-	BEQ elseif_pv
+	BEQ elseif_pv_1
 	//r0 = casilla, r1 = dir(longitud), r2 = FA, r3=C, r4=SF, r5=SC
 	//r6 = color, r7 = longitud ,r8 = tablero
 
@@ -206,16 +206,19 @@ patron_volteo_arm_c:
 	STMFD   sp!, {r4-r6}	// apilamos sf, sc, color
 	BL patron_volteo_arm_c	// patron_voleto()
 	ADD sp, sp, #12			// desapilamos los parametros
-	LDMDB	fp, {r4-r9, fp, sp, pc}
+	LDMFD   sp!, {r4-r9, fp, pc}
+
 elseif_pv_1:
     CMP     r7, #0			// devuelve el resulado segun el valor de longitud
     MOVGT   r0, #1
     MOVLE   r0, #0
-	LDMDB	fp, {r4-r9, fp, sp, pc}
+    LDMFD   sp!, {r4-r9, fp, pc}
+
 
 else_pv_1:					// else
 	MOV r0, #0				// devuelve 0
-	LDMDB	fp, {r4-r9, fp, sp, pc}
+	LDMFD   sp!, {r4-r9, fp, pc}
+
 #################################################################################################################
 // patron_volteo_arm_thumb:
 // parametros: r0=tablero, r1=dir(longitud), r2=FA, r3=CA
@@ -226,27 +229,26 @@ else_pv_1:					// else
 ######################################################################################################
 patron_volteo_arm_thumb:
 
-	MOV	ip, sp
-	STMDB	sp!, {r4-r9, fp, ip, lr, pc}
-	SUB	fp, ip, #4
-	//espacio variable local
-	SUB sp, sp, #4
+		// sbr gurda registros, fp y lr
+	STMFD   sp!, {fp, lr}
+	MOV fp, sp
+	STMFD   sp!, {r4-r9}
 
 	//se guarda tablero y longitud para invocar a ficha_valida()
 	MOV r7, r1
 	MOV r8, r0
 
 	//saca los parametros SF SC de la pila
-	LDRB r4, [fp, #4]
-	LDRB r5, [fp, #8]
+	LDRB r4, [fp, #8]
+	LDRB r5, [fp, #12]
 
 	//ADD y llamada ficha valida
 	ADD r1, r2, r4
 	AND r1, r1, #255
 	ADD r2, r3, r5
 	AND r2, r2, #255
-	SUB r3, fp, #32
-	MOV r6, r1				//guarda fa y fc
+	LDR r3, =Pos_valida
+	MOV r6, r1
 	MOV r9, r2
 	BL ficha_valida_thumb
 	//r0 = casilla, r1 = dir(posicion)
@@ -254,18 +256,16 @@ patron_volteo_arm_thumb:
 	MOV r3, r9				//restarura parametros
 	MOV r2, r6
 	MOV r1, r7
-	LDR r6, [fp, #-32]			//posicion se utiliza luegi
-	//LDR r6, =Pos_valida
-	//LDR r6, [r6]
+	LDR r6, =Pos_valida			//posicion se utiliza luegi
 	//r0 = casilla, r1 = dir(longitud), r2 = FA, r3=C, r4=SF, r5=SC
 	//r6 = **, r7 = dir(longitud) ,r8 = tablero
-					// IF poscion valida = 1
+	LDR r6, [r6]				// IF poscion valida = 1
 	CMP r6, #1
-	BNE else_pv
-	LDRB r6, [fp, #12]			// cargamos color de la pila
+	BNE else_pv_2
+	LDRB r6, [fp, #16]			// cargamos color de la pila
 	LDR  r7, [r1]				// se carga *longitud (se utiliza despues)
 	CMP r6, r0					// IF color==casilla
-	BEQ elseif_pv
+	BEQ elseif_pv_2
 	//r0 = casilla, r1 = dir(longitud), r2 = FA, r3=C, r4=SF, r5=SC
 	//r6 = color, r7 = longitud ,r8 = tablero
 
@@ -276,16 +276,19 @@ patron_volteo_arm_thumb:
 	STMFD   sp!, {r4-r6}	// apilamos sf, sc, color
 	BL patron_volteo_arm_thumb	// patron_voleto()
 	ADD sp, sp, #12			// desapilamos los parametros
-	LDMDB	fp, {r4-r9, fp, sp, pc}
+	LDMFD   sp!, {r4-r9, fp, pc}
+
 elseif_pv_2:
     CMP     r7, #0			// devuelve el resulado segun el valor de longitud
     MOVGT   r0, #1
     MOVLE   r0, #0
-	LDMDB	fp, {r4-r9, fp, sp, pc}
+    LDMFD   sp!, {r4-r9, fp, pc}
+
 
 else_pv_2:					// else
 	MOV r0, #0				// devuelve 0
-	LDMDB	fp, {r4-r9, fp, sp, pc}
+	LDMFD   sp!, {r4-r9, fp, pc}
+
 #################################################################################################################
 
 
