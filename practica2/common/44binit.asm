@@ -11,6 +11,9 @@
     .include "option.a"
     .include "memcfg.a"
 
+    .extern D8Led_init
+    .extern D8Led_symbol
+
 #Memory Area
 #GCS6    8M 16bit(8MB) DRAM/SDRAM(0xc000000-0xc7fffff)
 #APP     RAM=0xc000000~0xc7effff 
@@ -176,6 +179,13 @@ HandlerEINT2:	HANDLER HandleEINT2
 HandlerEINT1:	HANDLER HandleEINT1
 HandlerEINT0:	HANDLER HandleEINT0
 
+ExceptionIRQ:
+	#push{r0-,fp}
+	BL D8Led_init
+	MOV r0, #e
+    BL D8Led_symbol
+	#pop{r0-, fp}
+	#subs pc,lr,#4
 #One of the following two routines can be used for non-vectored interrupt.
 
 IsrIRQ:						/* using I_ISPR register. */
@@ -270,6 +280,13 @@ ResetHandler:
     #;****************************************************
     ldr	    r0,=HandleIRQ		/* This routine is needed */
     ldr	    r1,=IsrIRQ			/* if there is not 'subs pc,lr,#4' at 0x18, 0x1c */
+    str	    r1,[r0]
+
+    #;***********************************************************************************************************************************************************
+    #;*	Modificamos direccion de la rutina de tratamiento								*
+    #;***********************************************************************************************************************************************************
+    ldr	    r0,=HandleUndef
+    ldr	    r1,=ExceptionIRQ
     str	    r1,[r0]
 
     #********************************************************
@@ -416,7 +433,7 @@ SMRDATA:
 	.long 0x20				/* MRSR6 CL=2clk                          */
 	.long 0x20				/* MRSR7                                  */
 
-
+.equ	DebugStack, _ISR_STARTADDRESS-0xf00-(256*3)    		/* STACK APARTADO 7 */
 .equ 	UserStack,	_ISR_STARTADDRESS-0xf00    		/* c7ff000 */   	
 .equ	SVCStack,	_ISR_STARTADDRESS-0xf00+256    	/* c7ff100 */
 .equ	UndefStack,	_ISR_STARTADDRESS-0xf00+256*2   /* c7ff200 */
