@@ -12,6 +12,7 @@
 #include "timer.h"
 #include "44blib.h"
 #include "44b.h"
+#include "timer2.h"
 
 /*--- variables globales ---*/
 
@@ -25,6 +26,8 @@ void Main(void)
 	Eint4567_init();	// inicializamos los pulsadores. Cada vez que se pulse se verá reflejado en el 8led
 	D8Led_init();       // inicializamos el 8led
 
+	timer2_inicializar();
+	timer2_empezar();
 
 	/* Valor inicial de los leds */
 	leds_off();
@@ -35,6 +38,7 @@ void Main(void)
 		/* Cambia los leds con cada interrupcion del temporizador */
 		if (switch_leds == 1)
 		{
+			int x = timer2_leer();
 			leds_switch();
 			switch_leds = 0;
 		}

@@ -31,18 +31,17 @@ void timer2_inicializar(void)
 	/* Configuraion controlador de interrupciones */
 	rINTMOD = 0x0; // Configura las linas como de tipo IRQ
 	rINTCON = 0x1; // Habilita int. vectorizadas y la linea IRQ (FIQ no)
-	rINTMSK = ~(BIT_GLOBAL | BIT_TIMER2); // Emascara todas las lineas excepto Timer0 y el bit global (bits 26 y 13, BIT_GLOBAL y BIT_TIMER0 están definidos en 44b.h)
+	rINTMSK &= ~(BIT_GLOBAL | BIT_TIMER2); // Emascara todas las lineas excepto Timer0 y el bit global (bits 26 y 13, BIT_GLOBAL y BIT_TIMER0 están definidos en 44b.h)
 
 	/* Establece la rutina de servicio para TIMER0 */
-	pISR_TIMER2 = (unsigned) timer_ISR;
+	pISR_TIMER2 = (unsigned) timer2_ISR;
 
 	/* Configura el Timer0 */
-	rTCFG0 = 255;   // PREESCALADO ajusta el preescalado
-	rTCFG1 = 0x0;   // DIVISOR selecciona la entrada del mux que proporciona el reloj. La 00 corresponde a un divisor de 1/2.
+	rTCFG0 |= 0xff00;   // PREESCALADO ajusta el preescalado
+	rTCFG1 |= 0x0;   // DIVISOR selecciona la entrada del mux que proporciona el reloj. La 00 corresponde a un divisor de 1/2.
 	rTCNTB2 = 65535;// CADA PAR DE REG valor inicial de cuenta (la cuenta es descendente)
 	rTCMPB2 = 12800;// valor de comparación
 	/* establecer update=manual (bit 1) + inverter=on (¿? será inverter off un cero en el bit 2 pone el inverter en off)*/
-	rTCON = 0x2;	// CONTROL TEMP
 
 }
 
@@ -50,12 +49,19 @@ void timer2_inicializar(void)
  * reinicia cuenta de tiempo y comienza a medir
  */
 void timer2_empezar(void){
-		timer2_num = 0;
 
 		/* valor inicial de la cuenta*/
 		rTCNTB2 = 65535;// CADA PAR DE REG valor inicial de cuenta (la cuenta es descendente)
 		/* iniciar timer (bit 0) con auto-reload (bit 3)*/
-		rTCON = 0x09;
+
+
+		rTCON |= 0x2000;	// CONTROL TEMP
+		rTCON &= ~(1 << 0x2000);
+		rTCON = (rTCON & 0xFFFF0FFF);
+		rTCON |= 0x9000;
+
+		timer2_num = 0;
+
 }
 
 int timer2_leer(void){
