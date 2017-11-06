@@ -65,5 +65,5 @@ void timer2_empezar(void){
 }
 
 int timer2_leer(void){
-	return timer2_num;
+	return timer2_num*1000000;
 }

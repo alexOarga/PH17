@@ -39,6 +39,8 @@ void Main(void)
 		if (switch_leds == 1)
 		{
 			int x = timer2_leer();
+			Delay(100);
+			int y = timer2_leer();
 			leds_switch();
 			switch_leds = 0;
 		}
