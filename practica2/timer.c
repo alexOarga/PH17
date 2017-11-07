@@ -9,6 +9,7 @@
 #include "timer.h"
 #include "44b.h"
 #include "44blib.h"
+#include "button.h"
 
 /*--- variables globales ---*/
 int switch_leds = 0;
@@ -21,6 +22,34 @@ void timer_ISR(void) __attribute__((interrupt("IRQ")));
 void timer_ISR(void)
 {
 	switch_leds = 1;
+
+	////////////////////////////////////////////////////
+	// maquina de estados
+	switch(estado){
+			case 0:
+				// button.c
+				break;
+			case 1:
+				if(cuenta_trp > 0){
+					cuenta_trp--;
+				}else{
+					estado = espera_soltar;
+				}
+				break;
+			case 2:
+				// TODO
+				break;
+			case 3:
+				if(cuenta_trd > 0){
+					cuenta_trd--;
+				}else{
+					estado = espera;
+				}
+				break;
+			default
+				break;
+		}
+	////////////////////////////////////////////////////
 
 	/* borrar bit en I_ISPC para desactivar la solicitud de interrupción*/
 	rI_ISPC |= BIT_TIMER0; // BIT_TIMER0 está definido en 44b.h y pone un uno en el bit 13 que correponde al Timer0
