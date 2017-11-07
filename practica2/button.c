@@ -11,6 +11,7 @@
 #include "44blib.h"
 #include "44b.h"
 #include "def.h"
+#include "debugPila.h"
 
 /*--- variables globales del módulo ---*/
 /* int_count la utilizamos para sacar un número por el 8led.
@@ -26,6 +27,7 @@ void Eint4567_ISR(void)
 {
 	/* Identificar la interrupcion (hay dos pulsadores)*/
 	int which_int = rEXTINTPND;
+	push_debug(8,which_int);
 	switch (which_int)
 	{
 		case 4:

@@ -5,11 +5,11 @@
 * Version:
 *********************************************************************************************/
 
-#ifndef _EXC_H_
-#define _EXC_H_
+#ifndef _DEB_H_
+#define _DEB_H_
 
 void debug_init();
 void push_debug(int ID_evento, int auxData);
 
 
-#endif /* _TIMER_H_ */
+#endif

@@ -38,7 +38,7 @@ void timer2_inicializar(void)
 
 	/* Configura el Timer0 */
 	rTCFG0 |= 0xff00;   // PREESCALADO ajusta el preescalado
-	rTCFG1 |= 0x0;   // DIVISOR selecciona la entrada del mux que proporciona el reloj. La 00 corresponde a un divisor de 1/2.
+	rTCFG1 |= 0x00;   // DIVISOR selecciona la entrada del mux que proporciona el reloj. La 00 corresponde a un divisor de 1/2.
 	rTCNTB2 = 65535;// CADA PAR DE REG valor inicial de cuenta (la cuenta es descendente)
 	rTCMPB2 = 12800;// valor de comparación
 	/* establecer update=manual (bit 1) + inverter=on (¿? será inverter off un cero en el bit 2 pone el inverter en off)*/
@@ -65,5 +65,6 @@ void timer2_empezar(void){
 }
 
 int timer2_leer(void){
-	return timer2_num*1000000;
+	int actual = (rTCNTB2-rTCNTO2);
+	return (timer2_num*(rTCNTB2-rTCMPB2)+actual)/2000000;
 }

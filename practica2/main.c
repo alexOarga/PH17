@@ -25,6 +25,7 @@ void Main(void)
 	timer_init();	    // Inicializacion del temporizador
 	Eint4567_init();	// inicializamos los pulsadores. Cada vez que se pulse se verá reflejado en el 8led
 	D8Led_init();       // inicializamos el 8led
+	debug_init();
 
 	timer2_inicializar();
 	timer2_empezar();
