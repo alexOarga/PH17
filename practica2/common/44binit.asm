@@ -179,13 +179,10 @@ HandlerEINT2:	HANDLER HandleEINT2
 HandlerEINT1:	HANDLER HandleEINT1
 HandlerEINT0:	HANDLER HandleEINT0
 
-ExceptionIRQ:
-	#push{r0-,fp}
-	BL D8Led_init
-	MOV r0, #e
-    BL D8Led_symbol
-	#pop{r0-, fp}
-	#subs pc,lr,#4
+read_CPSR:
+	mrs r0, cpsr
+	and r0, r0, #0x1f
+
 #One of the following two routines can be used for non-vectored interrupt.
 
 IsrIRQ:						/* using I_ISPR register. */
@@ -282,12 +279,7 @@ ResetHandler:
     ldr	    r1,=IsrIRQ			/* if there is not 'subs pc,lr,#4' at 0x18, 0x1c */
     str	    r1,[r0]
 
-    #;***********************************************************************************************************************************************************
-    #;*	Modificamos direccion de la rutina de tratamiento								*
-    #;***********************************************************************************************************************************************************
-    ldr	    r0,=HandleUndef
-    ldr	    r1,=ExceptionIRQ
-    str	    r1,[r0]
+
 
     #********************************************************
     #*	Copy and paste RW data/zero initialized data	    *
