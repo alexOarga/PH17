@@ -9,7 +9,6 @@
 #include "button.h"
 #include "timer.h"
 #include "debugPila.h"
-#include "maquinaEstado.h"
 
 /*--- variables globales ---*/
 

@@ -12,12 +12,34 @@
 #include "44b.h"
 #include "def.h"
 #include "debugPila.h"
-#include "maquinaEstado.h"
 
 /*--- variables globales del módulo ---*/
 /* int_count la utilizamos para sacar un número por el 8led.
   Cuando se pulsa un botón sumamos y con el otro restamos. ¡A veces hay rebotes! */
 static unsigned int int_count = 0;
+
+//////////////////////////////////////////////////////////////////////////////
+/* estado actual de la maquina de estados */
+int estado = 0;
+
+/* definimos estados de la maquina */
+int espera = 0;
+int trp = 1;
+int espera_soltar = 2;
+int trd = 3;
+
+/* cuentas del temporizador de los estados trp y trd */
+int cuenta_trp = 100;
+int cuenta_trd = 100;
+int cuenta_15 = 100;
+
+/* identificador del boton pulsado */
+int id_boton = 0;
+
+int pulsado = 0;
+int levantado6 = 0;
+int levantado7 = 0;
+//////////////////////////////////////////////////////////////////////////////
 
 unsigned int desplazar_bits(unsigned int registro,int pos){
 	registro = (registro >> pos);
@@ -40,6 +62,7 @@ void Eint4567_ISR(void)
 	/* Identificar la interrupcion (hay dos pulsadores)*/
 	int which_int = rEXTINTPND;
 	push_debug(8,which_int);
+
 	switch (which_int)
 	{
 		case 4:
@@ -56,20 +79,52 @@ void Eint4567_ISR(void)
 
 	////////////////////////////////////////
 
-	if(desplazar_bits(rPDATG,6)==0 && desplazar_bits(rINTPND,21)==1){
-		id_boton = 6;		// pulsador 1 EXINT 6
-		pulsado = 1;
-	}else if(desplazar_bits(rPDATG,7)==0 && desplazar_bits(rINTPND,21)==1){
-		id_boton = 7;		// pulsador 2 EXINT 7
-		pulsado = 1;
-	}
-		if(desplazar_bits(rPDATG,6)==1){
-			levantado6 = 1;
-		}else if(desplazar_bits(rPDATG,7)==1){
-			levantado7 =1;
-		}
+
+
+
+
+
+	// timer 0 vuelve a habilitar pulsador
 
 	////////////////////////////////////////
+		////////////////////////////////////////
+
+		rINTMSK |= BIT_EINT4567;	// dehabilitamos
+
+				// maquina de estados
+				switch(estado){
+					case 0:
+						if(desplazar_bits(rPDATG,6)==0 && desplazar_bits(rINTPND,21)==1){
+							id_boton = 6;		// pulsador 1 EXINT 6
+							cuenta_trp = 200;	// inicia cuenta contador
+							estado = 1;		// estado 1
+						}else if(desplazar_bits(rPDATG,7)==0 && desplazar_bits(rINTPND,21)==1){
+							id_boton = 7;		// pulsador 2 EXINT 7
+							cuenta_trp = 200;	// inicia cuenta contador7
+							estado = 1;		// estado 1
+						}
+						break;
+					//case 1:
+						// timer.c
+					//	break;
+					case 2:
+						if(desplazar_bits(rPDATG,6)==1 && id_boton==6){
+							cuenta_trp = 200;	// inicia cuenta contador
+							estado = trd;		// estado 1
+						}else if(desplazar_bits(rPDATG,7)==1 && id_boton==7){
+							cuenta_trp = 200;	// inicia cuenta contador
+							estado = trd;		// estado 1
+						}
+						break;
+					//case 3:
+						// timer.c
+					//	break;
+					default:
+						break;
+				}
+
+
+				////////////////////////////////////////
 
 	/* Finalizar ISR */
 	rEXTINTPND = 0xf;				// borra los bits en EXTINTPND
@@ -83,7 +138,7 @@ void Eint4567_init(void)
 	rEXTINTPND = 0xf;       // Borra EXTINTPND escribiendo 1s en el propio registro
 	rINTMOD    = 0x0;		// Configura las linas como de tipo IRQ
 	rINTCON    = 0x1;	    // Habilita int. vectorizadas y la linea IRQ (FIQ no)
-	rINTMSK    = ~(BIT_GLOBAL | BIT_EINT4567 | BIT_TIMER0); // Enmascara todas las lineas excepto eint4567, el bit global y el timer0
+	rINTMSK    = ~(BIT_GLOBAL | BIT_EINT4567 | BIT_TIMER0 |BIT_TIMER2); // Enmascara todas las lineas excepto eint4567, el bit global y el timer0
 
 	/* Establece la rutina de servicio para Eint4567 */
 	pISR_EINT4567 = (int) Eint4567_ISR;

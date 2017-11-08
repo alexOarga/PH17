@@ -11,7 +11,6 @@
 #include "44blib.h"
 #include "button.h"
 #include "debugPila.h"
-#include "maquinaEstado.h"
 
 /*--- variables globales ---*/
 int switch_leds = 0;
@@ -32,6 +31,7 @@ void timer_ISR(void)
 				if(cuenta_trp > 0){
 					cuenta_trp--;
 				}else{
+					rINTMSK &= ~(BIT_EINT4567);	//habilitamos pulsador
 					estado = espera_soltar;
 				}
 				break;
@@ -39,6 +39,7 @@ void timer_ISR(void)
 				if(cuenta_trd > 0){
 					cuenta_trd--;
 				}else{
+					rINTMSK &= ~(BIT_EINT4567); // habilitamos pulsador
 					estado = espera;
 				}
 				break;
@@ -62,7 +63,7 @@ void timer_init(void)
 	pISR_TIMER0 = (unsigned) timer_ISR;
 
 	/* Configura el Timer0 */
-	rTCFG0 = 32; // ajusta el preescalado
+	rTCFG0 = 1; // ajusta el preescalado
 	rTCFG1 = 0x0; // selecciona la entrada del mux que proporciona el reloj. La 00 corresponde a un divisor de 1/2.
 	rTCNTB0 = 65535;// valor inicial de cuenta (la cuenta es descendente)
 	rTCMPB0 = 12800;// valor de comparación
