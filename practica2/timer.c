@@ -10,6 +10,8 @@
 #include "44b.h"
 #include "44blib.h"
 #include "button.h"
+#include "debugPila.h"
+#include "maquinaEstado.h"
 
 /*--- variables globales ---*/
 int switch_leds = 0;
@@ -26,18 +28,12 @@ void timer_ISR(void)
 	////////////////////////////////////////////////////
 	// maquina de estados
 	switch(estado){
-			case 0:
-				// button.c
-				break;
 			case 1:
 				if(cuenta_trp > 0){
 					cuenta_trp--;
 				}else{
 					estado = espera_soltar;
 				}
-				break;
-			case 2:
-				// TODO
 				break;
 			case 3:
 				if(cuenta_trd > 0){
@@ -46,7 +42,7 @@ void timer_ISR(void)
 					estado = espera;
 				}
 				break;
-			default
+			default:
 				break;
 		}
 	////////////////////////////////////////////////////
@@ -66,7 +62,7 @@ void timer_init(void)
 	pISR_TIMER0 = (unsigned) timer_ISR;
 
 	/* Configura el Timer0 */
-	rTCFG0 = 255; // ajusta el preescalado
+	rTCFG0 = 32; // ajusta el preescalado
 	rTCFG1 = 0x0; // selecciona la entrada del mux que proporciona el reloj. La 00 corresponde a un divisor de 1/2.
 	rTCNTB0 = 65535;// valor inicial de cuenta (la cuenta es descendente)
 	rTCMPB0 = 12800;// valor de comparación

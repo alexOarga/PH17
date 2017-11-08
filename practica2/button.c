@@ -12,31 +12,19 @@
 #include "44b.h"
 #include "def.h"
 #include "debugPila.h"
+#include "maquinaEstado.h"
 
 /*--- variables globales del módulo ---*/
 /* int_count la utilizamos para sacar un número por el 8led.
   Cuando se pulsa un botón sumamos y con el otro restamos. ¡A veces hay rebotes! */
 static unsigned int int_count = 0;
 
-//////////////////////////////////////////////////////////////////////////////
-/* estado actual de la maquina de estados */
-volatile int estado = 0;
+unsigned int desplazar_bits(unsigned int registro,int pos){
+	registro = (registro >> pos);
+	return registro & 0x1;
+}
 
-/* definimos estados de la maquina */
-int espera = 0;
-int trp = 1;
-int espera_soltar = 2;
-int trd = 3;
 
-/* cuentas del temporizador de los estados trp y trd */
-volatile int cuenta_trp;
-volatile int cuenta_trd;
-volatile int cuenta_15;
-
-/* identificador del boton pulsado */
-int id_boton;
-
-//////////////////////////////////////////////////////////////////////////////
 
 /* declaración de función que es rutina de servicio de interrupción
  * https://gcc.gnu.org/onlinedocs/gcc/ARM-Function-Attributes.html */
@@ -46,8 +34,8 @@ void Eint4567_ISR(void) __attribute__((interrupt("IRQ")));
 void Eint4567_ISR(void)
 {
 
-	/* deshabilitamos interrupciones pulsadores */
-	rINTMSK |= BIT_EINT4567;
+	///////////////////////////////////////////////////////
+	//rINTMSK &= ~BIT_EINT4567;
 
 	/* Identificar la interrupcion (hay dos pulsadores)*/
 	int which_int = rEXTINTPND;
@@ -67,32 +55,19 @@ void Eint4567_ISR(void)
 	D8Led_symbol(int_count & 0x000f); // sacamos el valor por pantalla (módulo 16)
 
 	////////////////////////////////////////
-	// maquina de estados
-	switch(estado){
-		case 0:
-			if(rEXTINTPND[2]==1 && rINTPND[21]==1){
-				id_boton = 6;		// pulsador 1 EXINT 6
-				estado = 1;		// estado 1
-				cuenta_trp = 200;	// inicia cuenta contador
-			}else if(rEXTINTPND[3]==1 && rINTPND[21]==1){
-				id_boton = 7;		// pulsador 2 EXINT 7
-				estado = 1;		// estado 1
-				cuenta_trp = 200;	// inicia cuenta contador
-			}
-			break;
-		case 1:
-			// contador 0 pasa al siguiente estado cuando cuenta_trp es 0
-			break;
-		case 2:
-			// TODO
-			break;
-		case 3:
-			// contador 0 pasa al siguiente estado (0) cuando cuenta_trd es 0
-			break;
-		default:
-			break;
-	}
 
+	if(desplazar_bits(rPDATG,6)==0 && desplazar_bits(rINTPND,21)==1){
+		id_boton = 6;		// pulsador 1 EXINT 6
+		pulsado = 1;
+	}else if(desplazar_bits(rPDATG,7)==0 && desplazar_bits(rINTPND,21)==1){
+		id_boton = 7;		// pulsador 2 EXINT 7
+		pulsado = 1;
+	}
+		if(desplazar_bits(rPDATG,6)==1){
+			levantado6 = 1;
+		}else if(desplazar_bits(rPDATG,7)==1){
+			levantado7 =1;
+		}
 
 	////////////////////////////////////////
 

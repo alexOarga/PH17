@@ -6,13 +6,10 @@
 *********************************************************************************************/
 
 /*--- ficheros de cabecera ---*/
-#include "8led.h"
 #include "button.h"
-#include "led.h"
 #include "timer.h"
-#include "44blib.h"
-#include "44b.h"
-#include "timer2.h"
+#include "debugPila.h"
+#include "maquinaEstado.h"
 
 /*--- variables globales ---*/
 
@@ -45,5 +42,8 @@ void Main(void)
 			leds_switch();
 			switch_leds = 0;
 		}
+
+		f_estado();
+
 	}
 }

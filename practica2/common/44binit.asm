@@ -14,6 +14,8 @@
     .extern D8Led_init
     .extern D8Led_symbol
 
+    .global CPSR_read
+
 #Memory Area
 #GCS6    8M 16bit(8MB) DRAM/SDRAM(0xc000000-0xc7fffff)
 #APP     RAM=0xc000000~0xc7effff 
@@ -179,7 +181,7 @@ HandlerEINT2:	HANDLER HandleEINT2
 HandlerEINT1:	HANDLER HandleEINT1
 HandlerEINT0:	HANDLER HandleEINT0
 
-read_CPSR:
+CPSR_read:
 	mrs r0, cpsr
 	and r0, r0, #0x1f
 
