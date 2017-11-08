@@ -42,7 +42,7 @@ void Main(void)
 			switch_leds = 0;
 		}
 
-		f_estado();
+
 
 	}
 }
