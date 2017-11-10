@@ -10,29 +10,26 @@
 
 //////////////////////////////////////////////////////////////////////////////
 /* estado actual de la maquina de estados */
-int estado;
+volatile int estado;
 
 /* definimos estados de la maquina */
-int espera;
-int trp;
-int espera_soltar;
-int trd;
+volatile int espera;
+volatile int trp;
+volatile int espera_soltar;
+volatile int trd;
 
 /* cuentas del temporizador de los estados trp y trd */
-int cuenta_trp;
-int cuenta_trd;
-int cuenta_15;
+volatile int cuenta_trp;
+volatile int cuenta_trd;
 
 /* identificador del boton pulsado */
-int id_boton;
-
-int pulsado;
-int levantado6;
-int levantado7;
+volatile int id_boton;
 
 //////////////////////////////////////////////////////////////////////////////
 
-/*--- declaracion de funciones visibles del módulo button.c/button.h ---*/
+/*--- declaracion de funciones visibles del mï¿½dulo button.c/button.h ---*/
 void Eint4567_init(void);
+unsigned int desplazar_bits(unsigned int registro,int pos);
+
 
 #endif /* _BUTTON_H_ */

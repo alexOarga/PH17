@@ -9,6 +9,7 @@
 #include "button.h"
 #include "timer.h"
 #include "debugPila.h"
+#include "timer2.h"
 
 /*--- variables globales ---*/
 
@@ -19,7 +20,7 @@ void Main(void)
 	/* Inicializa controladores */
 	sys_init();         // Inicializacion de la placa, interrupciones y puertos
 	timer_init();	    // Inicializacion del temporizador
-	Eint4567_init();	// inicializamos los pulsadores. Cada vez que se pulse se verá reflejado en el 8led
+	Eint4567_init();	// inicializamos los pulsadores. Cada vez que se pulse se verï¿½ reflejado en el 8led
 	D8Led_init();       // inicializamos el 8led
 	debug_init();
 
@@ -30,19 +31,22 @@ void Main(void)
 	leds_off();
 	led1_on();
 
+	/*
 	while (1)
 	{
-		/* Cambia los leds con cada interrupcion del temporizador */
+
 		if (switch_leds == 1)
 		{
 			int x = timer2_leer();
 			Delay(100);
 			int y = timer2_leer();
+			int z = y-x;
 			leds_switch();
 			switch_leds = 0;
 		}
-
-
-
+		int estadolec = estado;
 	}
+*/
+
+	reversi8();
 }

@@ -66,5 +66,5 @@ void timer2_empezar(void){
 
 int timer2_leer(void){
 	int actual = (rTCNTB2-rTCNTO2);
-	return (timer2_num*(rTCNTB2-rTCMPB2)+actual)/2000000;
+	return (timer2_num*(rTCNTB2-rTCMPB2)+actual)/12900;
 }
