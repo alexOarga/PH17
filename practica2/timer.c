@@ -43,6 +43,9 @@ void timer_ISR(void)
 					push_debug(9,8);
 					cuenta_trd = 25;	// inicia cuenta contador
 					estado = trd;		// estado 1
+				}else{
+					estado = aumenta;
+					cuenta_medio = 250;
 				}
 				break;
 			case 3:
@@ -55,6 +58,23 @@ void timer_ISR(void)
 					rINTMSK &= ~(BIT_EINT4567); // habilitamos pulsador
 				}
 				break;
+			case 4:
+				if(id_boton==6 && desplazar_bits(rPDATG,6)==1 ){
+					push_debug(8,4);
+					cuenta_trd = 25;	// inicia cuenta contador
+					estado = trd;		// estado 1
+				}else if(id_boton==7 && desplazar_bits(rPDATG,7)==1){
+					push_debug(9,8);
+					cuenta_trd = 25;	// inicia cuenta contador
+					estado = trd;		// estado 1
+				}else{
+					if(cuenta_medio > 0){
+						D8Led_symbol(int_count & 0x000f); // sacamos el valor por pantalla (m�dulo 16)
+						cuenta_medio = 250;
+					}else{
+						cuenta_medio--;
+					}
+				}
 			default:
 				break;
 		}

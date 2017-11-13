@@ -17,10 +17,12 @@ volatile int espera;
 volatile int trp;
 volatile int espera_soltar;
 volatile int trd;
+volatile int aumenta;
 
 /* cuentas del temporizador de los estados trp y trd */
 volatile int cuenta_trp;
 volatile int cuenta_trd;
+volatile int cuenta_medio;
 
 /* identificador del boton pulsado */
 volatile int id_boton;

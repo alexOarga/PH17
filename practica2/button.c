@@ -27,10 +27,14 @@ volatile int espera = 0;
 volatile int trp = 1;
 volatile int espera_soltar = 2;
 volatile int trd = 3;
+volatile int aumenta = 4;
 
 /* cuentas del temporizador de los estados trp y trd */
 volatile int cuenta_trp = 25;
 volatile int cuenta_trd = 25;
+volatile int cuenta_medio = 250;
+// 5 - 10ms
+// 250		500ms
 
 /* identificador del boton pulsado */
 volatile int id_boton = 6;
