@@ -10,6 +10,7 @@
 #include "timer.h"
 #include "debugPila.h"
 #include "timer2.h"
+#include "excepcion.h"
 
 /*--- variables globales ---*/
 
@@ -23,6 +24,7 @@ void Main(void)
 	Eint4567_init();	// inicializamos los pulsadores. Cada vez que se pulse se ver� reflejado en el 8led
 	D8Led_init();       // inicializamos el 8led
 	debug_init();
+	init_exception();
 
 	timer2_inicializar();
 	timer2_empezar();

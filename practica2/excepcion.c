@@ -32,7 +32,7 @@ void exception_handler(void)
 {
 	int excep = CPSR_read();
 	if(excep == 23){
-		D8Led_symbol(10);
+		D8Led_symbol(13);
 	}
 	else if(excep == 27){
 		D8Led_symbol(14);

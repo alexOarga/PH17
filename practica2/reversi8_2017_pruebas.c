@@ -604,8 +604,12 @@ void actualizar_candidatas(char candidatas[][DIM], char f, char c)
 // en esta versión el humano lleva negras y la máquina blancas
 // no se comprueba que el humano mueva correctamente.
 // Sólo que la máquina realice un movimiento correcto.
+extern void genera_exception_dabort();
+
 void reversi8()
 {
+
+	genera_exception_dabort();
 
 	 ////////////////////////////////////////////////////////////////////
 	 // Tablero candidatas: se usa para no explorar todas las posiciones del tablero
@@ -657,7 +661,7 @@ void reversi8()
             actualizar_candidatas(candidatas, f, c);
         }
         int y = timer2_leer();
-        volatile int res = y - x;
+        int res = y - x;
 
     }
     contar(tablero, &blancas, &negras);

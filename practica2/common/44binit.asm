@@ -15,6 +15,8 @@
     .extern D8Led_symbol
 
     .global CPSR_read
+    .global genera_exception_dabort
+    .global genera_exception_undef
 
 #Memory Area
 #GCS6    8M 16bit(8MB) DRAM/SDRAM(0xc000000-0xc7fffff)
@@ -181,9 +183,24 @@ HandlerEINT2:	HANDLER HandleEINT2
 HandlerEINT1:	HANDLER HandleEINT1
 HandlerEINT0:	HANDLER HandleEINT0
 
+genera_exception_dabort:
+	ldr r0, =DebugStack
+	add r0,r0, #1
+	ldr r0,[r0]
+	bx 	lr
+
+genera_exception_undef:
+	ldr r0, =DebugStack
+	LDR R0, [r0, #+0]
+	bx R0
+	MOVS R0, R4
+	ldr r0,[r0]
+	bx 	lr
+
 CPSR_read:
 	mrs r0, cpsr
 	and r0, r0, #0x1f
+	bx	lr
 
 #One of the following two routines can be used for non-vectored interrupt.
 
