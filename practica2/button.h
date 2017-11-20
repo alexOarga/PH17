@@ -11,6 +11,7 @@
 //////////////////////////////////////////////////////////////////////////////
 /* estado actual de la maquina de estados */
 volatile int estado;
+volatile static unsigned int int_count;
 
 /* definimos estados de la maquina */
 volatile int espera;
@@ -27,6 +28,18 @@ volatile int cuenta_medio;
 /* identificador del boton pulsado */
 volatile int id_boton;
 
+//////////////////////////////////////////////////////////////////////////////
+
+volatile int inicial_juego;
+volatile int espera_fila;
+volatile int aumenta_fila;
+volatile int espera_col;
+volatile int aumenta_col;
+
+volatile int estado_juego;
+
+volatile int cuenta_fila;
+volatile int cuenta_col;
 //////////////////////////////////////////////////////////////////////////////
 
 /*--- declaracion de funciones visibles del m�dulo button.c/button.h ---*/

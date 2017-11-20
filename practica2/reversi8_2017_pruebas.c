@@ -609,7 +609,7 @@ extern void genera_exception_dabort();
 void reversi8()
 {
 
-	genera_exception_dabort();
+	//genera_exception_dabort();
 
 	 ////////////////////////////////////////////////////////////////////
 	 // Tablero candidatas: se usa para no explorar todas las posiciones del tablero
