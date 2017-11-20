@@ -40,6 +40,8 @@ volatile int estado_juego;
 
 volatile int cuenta_fila;
 volatile int cuenta_col;
+
+volatile int eleccion_hecha;
 //////////////////////////////////////////////////////////////////////////////
 
 /*--- declaracion de funciones visibles del m�dulo button.c/button.h ---*/

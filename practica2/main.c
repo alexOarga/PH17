@@ -33,7 +33,7 @@ void Main(void)
 	leds_off();
 	led1_on();
 
-
+/*
 	while (1)
 	{
 
@@ -48,7 +48,7 @@ void Main(void)
 		}
 		int estadolec = estado;
 	}
-
+*/
 
 	reversi8();
 }

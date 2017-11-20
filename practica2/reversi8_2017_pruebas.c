@@ -19,6 +19,7 @@
 #define SI               1
 #define CASILLA_OCUPADA  2
 
+#include "button.h"
 
 /////////////////////////////////////////////////////////////////////////////
 // TABLAS AUXILIARES
@@ -113,11 +114,15 @@ void init_table(char tablero[][DIM], char candidatas[][DIM])
 // CUIDADO: si el compilador coloca esta variable en un registro, no funcionará.
 // Hay que definirla como "volatile" para forzar a que antes de cada uso la cargue de memoria 
 
-void esperar_mov(char *ready)
+void esperar_mov()
 {
-    while (*ready == 0) {};  // bucle de espera de respuestas hasta que el se modifique el valor de ready (hay que hacerlo manualmente)
+ //   while (*ready == 0) {};  // bucle de espera de respuestas hasta que el se modifique el valor de ready (hay que hacerlo manualmente)
 
-    *ready = 0;  //una vez que pasemos el bucle volvemos a fijar ready a 0;
+ //   *ready = 0;  //una vez que pasemos el bucle volvemos a fijar ready a 0;
+	while(eleccion_hecha==0){};
+
+	eleccion_hecha = 0;
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -500,7 +505,7 @@ int elegir_mov(char candidatas[][DIM], char tablero[][DIM], char *f, char *c,cha
                         //  //printf("%d ", patron);
                         /*
                         if (patron_c_c == patron_c_arm == patron_c_thumb == patron_arm_c == patron_arm_arm == patron_arm_thumb == PATRON_ENCONTRADO)
-                        {
+                        {*/
                             found = 1;
                             if (tabla_valor[i][j] > mejor)
                             {
@@ -508,7 +513,7 @@ int elegir_mov(char candidatas[][DIM], char tablero[][DIM], char *f, char *c,cha
                                 mc = j;
                                 mejor = tabla_valor[i][j];
                             }
-                        }else{
+                        /*}else{
                         	patron_c_c = patron_volteo_c_c(tablero, &longitud_c_c, i, j, SF, SC, tipoficha);
                         	patron_c_arm = patron_volteo_c_arm(tablero, &longitud_c_arm, i, j, SF, SC, tipoficha);
 							patron_c_thumb = patron_volteo_c_thumb(tablero, &longitud_c_thumb, i, j, SF, SC, tipoficha);
@@ -640,20 +645,24 @@ void reversi8()
     while (fin == 0)
     {
     	int x = timer2_leer();
-        done = elegir_mov(candidatas, tablero, &f, &c,FICHA_NEGRA);
-    	// si la fila o columna son 8 asumimos que el jugador no puede mover
-    	if (done == -1)
-    		fin = 1;
-    	else
-    	{
-    		tablero[f][c] = FICHA_NEGRA;
-    		actualizar_tablero(tablero, f, c, FICHA_NEGRA);
-			actualizar_candidatas(candidatas, f, c);
-    	}
+
+    	move = 0;
+    	esperar_mov();
+		fila = cuenta_fila;
+		columna = cuenta_col;
+		// si la fila o columna son 8 asumimos que el jugador no puede mover
+		if (((fila) != DIM) && ((columna) != DIM))
+		{
+			tablero[fila][columna] = FICHA_NEGRA;
+			actualizar_tablero(tablero, fila, columna, FICHA_NEGRA);
+			actualizar_candidatas(candidatas, fila, columna);
+			move = 1;
+		}
     	// escribe el movimiento en las variables globales fila columna
         done = elegir_mov(candidatas, tablero, &f, &c,FICHA_BLANCA);
-        if (done == -1)
-                fin = 1;
+        if (done == -1){
+            if (move == 0) fin = 1;
+        }
         else
         {
             tablero[f][c] = FICHA_BLANCA;

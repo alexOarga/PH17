@@ -49,6 +49,8 @@ volatile int estado_juego = 0;
 
 volatile int cuenta_fila = 0;
 volatile int cuenta_col = 0;
+
+volatile eleccion_hecha = 0;
 //////////////////////////////////////////////////////////////////////////////
 
 unsigned int desplazar_bits(unsigned int registro, int pos) {
@@ -91,10 +93,12 @@ void Eint4567_ISR(void) {
 
 	switch(estado_juego){
 		case 0:
+			eleccion_hecha = 0;
 			D8Led_symbol(0x000f);
 			estado_juego = espera_fila;
 			break;
 		case 1:
+			eleccion_hecha = 0;
 			if (desplazar_bits(rPDATG, 6) == 0 && desplazar_bits(rINTPND, 21) == 1) {
 				cuenta_fila = 0;
 				D8Led_symbol(cuenta_fila & 0x000f);
@@ -130,6 +134,7 @@ void Eint4567_ISR(void) {
 				}
 				D8Led_symbol(cuenta_col & 0x000f);
 			} else if (desplazar_bits(rPDATG, 7) == 0	&& desplazar_bits(rINTPND, 21) == 1) {
+				eleccion_hecha = 1;
 				estado_juego = inicial_juego;
 			}
 			break;
