@@ -37,7 +37,7 @@ void timer2_inicializar(void)
 	pISR_TIMER2 = (unsigned) timer2_ISR;
 
 	/* Configura el Timer0 */
-	rTCFG0 |= 0xff00;   // PREESCALADO ajusta el preescalado
+	rTCFG0 |= 0x0000;   // PREESCALADO ajusta el preescalado
 	rTCFG1 |= 0x00;   // DIVISOR selecciona la entrada del mux que proporciona el reloj. La 00 corresponde a un divisor de 1/2.
 	rTCNTB2 = 65535;// CADA PAR DE REG valor inicial de cuenta (la cuenta es descendente)
 	rTCMPB2 = 12800;// valor de comparación
@@ -51,13 +51,14 @@ void timer2_inicializar(void)
 void timer2_empezar(void){
 
 		/* valor inicial de la cuenta*/
-		rTCNTB2 = 65535;// CADA PAR DE REG valor inicial de cuenta (la cuenta es descendente)
+
+		rTCNTB2 = 65535;	// CADA PAR DE REG valor inicial de cuenta (la cuenta es descendente)
+
 		/* iniciar timer (bit 0) con auto-reload (bit 3)*/
 
-
+		rTCON &= ~(0xF000);
 		rTCON |= 0x2000;	// CONTROL TEMP
-		rTCON &= ~(1 << 0x2000);
-		rTCON = (rTCON & 0xFFFF0FFF);
+		rTCON &= ~(0x2000);
 		rTCON |= 0x9000;
 
 		timer2_num = 0;
@@ -66,5 +67,5 @@ void timer2_empezar(void){
 
 int timer2_leer(void){
 	int actual = (rTCNTB2-rTCNTO2);
-	return (timer2_num*(rTCNTB2-rTCMPB2)+actual)/12900;
+	return ((timer2_num*rTCNTB2)+actual)*0.03;
 }

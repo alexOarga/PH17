@@ -14,6 +14,7 @@
 
 /*--- variables globales ---*/
 int switch_leds = 0;
+enum estados_boton states;
 
 /* declaraci�n de funci�n que es rutina de servicio de interrupci�n
  * https://gcc.gnu.org/onlinedocs/gcc/ARM-Function-Attributes.html */
@@ -26,7 +27,7 @@ void timer_ISR(void) {
 	////////////////////////////////////////////////////
 	// maquina de estados
 	switch (estado) {
-	case 1:
+	case 1: //estado espera
 		if (cuenta_trp > 0) {
 			cuenta_trp--;
 		} else {
@@ -52,7 +53,7 @@ void timer_ISR(void) {
 					push_debug(2, 8);
 					int_count--;
 				}
-				D8Led_symbol(int_count & 0x000f); // sacamos el valor por pantalla (m�dulo 16)
+				//D8Led_symbol(int_count & 0x000f); // sacamos el valor por pantalla (m�dulo 16)
 				cuenta_medio = 300;
 			} else {
 				cuenta_medio--;

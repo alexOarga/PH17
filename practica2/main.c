@@ -8,9 +8,15 @@
 /*--- ficheros de cabecera ---*/
 #include "button.h"
 #include "timer.h"
-#include "debugPila.h"
 #include "timer2.h"
 #include "excepcion.h"
+#include "led.h"
+#include "debugPila.h"
+#include "8led.h"
+#include "44b.h"
+#include "44blib.h"
+
+#define PLACA 1
 
 /*--- variables globales ---*/
 
@@ -27,7 +33,6 @@ void Main(void)
 	init_exception();
 
 	timer2_inicializar();
-	timer2_empezar();
 
 	/* Valor inicial de los leds */
 	leds_off();
@@ -39,11 +44,13 @@ void Main(void)
 
 		if (switch_leds == 1)
 		{
-			int x = timer2_leer();
+			timer2_empezar();
 			Delay(100);
 			int y = timer2_leer();
-			int z = y-x;
-			leds_switch();
+			timer2_empezar();
+			Delay(1);
+			y = timer2_leer();
+			if(y>0)y-=1;
 			switch_leds = 0;
 		}
 		int estadolec = estado;

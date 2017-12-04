@@ -19,7 +19,21 @@
 #define SI               1
 #define CASILLA_OCUPADA  2
 
+enum maquina_est_juego{
+	inicial_juego	= 0,
+	espera_fila 	= 1,
+	aumenta_fila 	= 2,
+	espera_col 		= 3,
+	aumenta_col 	= 4
+};
+
+volatile int estado_juego = 0;
+
+volatile int cuenta_fila = 0;
+volatile int cuenta_col = 0;
+
 #include "button.h"
+#include "led.h"
 
 /////////////////////////////////////////////////////////////////////////////
 // TABLAS AUXILIARES
@@ -117,11 +131,72 @@ void init_table(char tablero[][DIM], char candidatas[][DIM])
 void esperar_mov()
 {
  //   while (*ready == 0) {};  // bucle de espera de respuestas hasta que el se modifique el valor de ready (hay que hacerlo manualmente)
-
  //   *ready = 0;  //una vez que pasemos el bucle volvemos a fijar ready a 0;
-	while(eleccion_hecha==0){};
+	int eleccion_hecha = 0;
+	while(eleccion_hecha==0){
+	  switch(estado_juego){
+	    case 0:
+	      if(izq_pulsado == 1 || dech_pulsado == 1){
+  			  izq_pulsado = 0;
+  			  dech_pulsado = 0;
+	    	  eleccion_hecha = 0;
+  			  D8Led_symbol(0x000f);
+  			  estado_juego = espera_fila;
+	      }
+			  break;
+	    case 1:
+	      if(izq_pulsado == 1){
+	    	  	  izq_pulsado = 0;
+	    	  	  cuenta_fila = 0;
+				  D8Led_symbol(cuenta_fila & 0x000f);
+				  estado_juego = aumenta_fila;
+	      }
+	      break;
+	    case 2:
+	      if(izq_pulsado == 1){
+	    	  izq_pulsado = 0;
+	    	  if(cuenta_fila < 7){
+  					cuenta_fila++;
+  				}else{
+  					cuenta_fila = 0;
+  				}
+  				D8Led_symbol(cuenta_fila & 0x000f);
+	      }else if(dech_pulsado == 1){
+	    	  	dech_pulsado = 0;
+  				D8Led_symbol(0x000c);
+  				estado_juego = espera_col;
+			  }
+	      break;
+	    case 3:
+  			if (izq_pulsado == 1) {
+  				izq_pulsado = 0;
+  				cuenta_col = 0;
+  				D8Led_symbol(cuenta_col & 0x000f);
+  				estado_juego = aumenta_col;
+  			}
+  			break;
+  		case 4:
+  			if (izq_pulsado == 1) {
+  				izq_pulsado = 0;
+  				if(cuenta_col < 7){
+  					cuenta_col++;
+  				}else{
+  					cuenta_col = 0;
+  				}
+  				D8Led_symbol(cuenta_col & 0x000f);
+  			} else if (dech_pulsado == 1) {
+  				dech_pulsado = 0;
+  				eleccion_hecha = 1;
+  				estado_juego = inicial_juego;
+  			}
+  			break;
+  		default:
+  			break;	
+	  }
+	}
 
-	eleccion_hecha = 0;
+	  eleccion_hecha = 0;
+	  
 
 }
 
