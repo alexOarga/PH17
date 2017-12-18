@@ -27,13 +27,19 @@ enum maquina_est_juego{
 	espera_fila 	= 1,
 	aumenta_fila 	= 2,
 	espera_col 		= 3,
-	aumenta_col 	= 4
+	aumenta_col 	= 4,
+	pulsado_pant	= 5
 };
 
 volatile int estado_juego = 0;
 
 volatile int cuenta_fila = 0;
 volatile int cuenta_col = 0;
+
+//////////////////////////////////////////////////////
+// eleccion de casilla con botnes o pantalla
+int eleccion_hecha = 0;
+int tamano_casilla = 0;
 
 #include "button.h"
 #include "led.h"
@@ -128,6 +134,80 @@ void init_table(char tablero[][DIM], char candidatas[][DIM])
     candidatas[5][5] = SI;
 }
 
+void zoom_pulsar(int x, int y){
+	Lcd_Clr();
+	Lcd_Active_Clr();
+	display_cuadricula(CHAR_HOR, CHAR_VER, DIM/2, x, y);
+	// DIBUJAR NUMEROS
+	int detectar_pulsacion = ultima_pulsacion();
+	while(ultima_pulsacion()==detectar_pulsacion){}
+	int puls_x = pulsacion_X_CORD()*LCD_XSIZE/(Xmax - Xmin);
+	int puls_y = pulsacion_Y_CORD()*LCD_YSIZE/(Ymax - Ymin);
+	// SI NO PULSA EN LA PARTE DCHA DE LA PANTALLA
+	if(puls_x < CHAR_VER + (DIM*tamano_casilla)){
+		int nueva_casilla_x = puls_x%(tamano_casilla*2);
+		int nueva_casilla_y = puls_y%(tamano_casilla*2);
+		// dibujar ficha
+		int intervalo = 10000;
+		int detenido = 0;
+		int inicio_tiempo = timer2_leer();
+		detectar_pulsacion = ultima_pulsacion();
+		while(timer2_leer()-inicio_tiempo < intervalo && detenido==0){
+			// parpadear...
+			if(detectar_pulsacion != ultima_pulsacion()){
+				detenido = 1;
+			}
+			if(izq_pulsado == 1){
+				izq_pulsado = 0;
+				detenido = 1;
+			}
+			if(dech_pulsado == 1){
+				dech_pulsado = 0;
+				detenido = 1;
+			}
+		}
+		// si no lo han detenido confirmamos
+		if(detenido == 0){
+			eleccion_hecha = 1;
+			int cuenta_fila = nueva_casilla_x + 1;
+			int cuenta_col = nueva_casilla_y + 1;
+		}
+	}
+}
+
+///////////////////////////////////////////////////////////////////
+// comprueba si se ha pulsado para hacer zoom o fuera del tablero
+// en caso de ser zoom, muestra zoom
+void comprobar_pulsacion(){
+	int puls_x = pulsacion_X_CORD()*LCD_XSIZE/(Xmax - Xmin);
+	int puls_y = pulsacion_Y_CORD()*LCD_YSIZE/(Ymax - Ymin);
+
+	// a pulsado en 8,8
+	if(puls_y < CHAR_VER){
+		eleccion_hecha = 1;
+		int cuenta_fila = 8;
+		int cuenta_col = 8;
+	}else{
+		// SI NO PULSA EN LA PARTE DCHA DE LA PANTALLA
+		if(puls_x < CHAR_VER + (DIM*tamano_casilla)){
+			if(puls_y < LCD_YSIZE){
+				if(puls_x < (CHAR_VER + (DIM*tamano_casilla))/2){
+					zoom_pulsar(0, 4);
+				}else{
+					zoom_pulsar(4, 4);
+				}
+			}else{
+				if(puls_x < (CHAR_VER + (DIM*tamano_casilla))/2){
+					zoom_pulsar(0, 0);
+				}else{
+					zoom_pulsar(4, 0);
+				}
+			}
+		}
+	}
+
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Espera a que ready valga 1.
 // CUIDADO: si el compilador coloca esta variable en un registro, no funcionará.
@@ -137,8 +217,16 @@ void esperar_mov()
 {
  //   while (*ready == 0) {};  // bucle de espera de respuestas hasta que el se modifique el valor de ready (hay que hacerlo manualmente)
  //   *ready = 0;  //una vez que pasemos el bucle volvemos a fijar ready a 0;
-	int eleccion_hecha = 0;
+	eleccion_hecha = 0;
+	int detectar_pulsacion = ultima_pulsacion();
+
 	while(eleccion_hecha==0){
+	////////////////////////////////////////////////////////////////////
+		if(detectar_pulsacion != ultima_pulsacion()){
+			estado_juego = pulsado_pant;
+		}
+	///////////////////////////////////////////////////////////////////
+
 	  switch(estado_juego){
 	    case 0:
 	      if(izq_pulsado == 1 || dech_pulsado == 1){
@@ -194,6 +282,10 @@ void esperar_mov()
   				eleccion_hecha = 1;
   				estado_juego = inicial_juego;
   			}
+  			break;
+  		case 5:
+			comprobar_pulsacion();
+			estado_juego = inicial_juego;
   			break;
   		default:
   			break;	
@@ -691,11 +783,54 @@ void actualizar_candidatas(char candidatas[][DIM], char f, char c)
 // Sólo que la máquina realice un movimiento correcto.
 extern void genera_exception_dabort();
 
+void dibujar_ficha(int color, int coor_x, int coor_y, int tamanyo){
+
+}
+
+// inicio_coor_x, inicio_coor_y : posicion de la esquina superior izquirda del tablero a mostrar
+// dimension es altura y anchura del tablero en casillas (8 o 4 con zoom)
+// inicio_x, inicio_y: poscion del tablero desde donde se muestra (para zoom)
+void dibujar_fichas_tablero(char tablero[][DIM], int inicio_x, int inicio_y,
+		int dimension, int inicio_coor_x, int inicio_coor_y, int tamanyo_casilla){
+	int i = 0;
+	int j = 0;
+	for(i = 0; i < dimension; i++){
+		for(j = 0; j < dimension; j++){
+			if(tablero[inicio_x + i][inicio_y + j]==FICHA_BLANCA ||
+					tablero[inicio_x + i][inicio_y + j]==FICHA_NEGRA){
+				dibujar_ficha(tablero[inicio_x + i][inicio_y + j],
+						inicio_coor_x + (tamanyo_casilla*i),
+						inicio_coor_y + (tamanyo_casilla*j),
+						tamanyo_casilla);
+			}
+		}
+	}
+}
+
+void display_cuadricula(int coor_x, int coor_y, int dimension, int tamanyo, int inicio_hor, int inicio_ver){
+	char inicio_numero_hor = '0' + inicio_hor;
+	char inicio_numero_ver = '0' + inicio_ver;
+	int i = 0;
+	for(i=0; i<dimension+1; i++){	// verticales
+		if(i < dimension){
+			char disp[] = {i + inicio_numero_ver, 0x0};
+			Lcd_DspAscII8x16(0,(tamanyo*i)+CHAR_VER,BLACK,disp);
+		}
+		//Lcd_Draw_Line(CHAR_HOR, (tamanyo*i)+CHAR_VER, , , 10, 2);
+		Lcd_Draw_VLine(coor_y, (tamanyo*dimension)+coor_y, (tamanyo*i)+coor_x, 10, 2);
+
+	}
+	for(i=0; i<dimension+1; i++){	// horizontales
+		if(i < dimension){
+			char disp[] = {i + inicio_numero_hor, 0x0};
+			Lcd_DspAscII8x16((tamanyo*i)+CHAR_HOR, 0,BLACK,disp);
+		}
+		//Lcd_Draw_Line((tamanyo*i)+CHAR_HOR,CHAR_VER, (tamanyo*i)+CHAR_HOR, (tamanyo*dimension)+CHAR_VER,  10, 2);
+		Lcd_Draw_HLine(coor_x, (tamanyo*dimension)+coor_x, (tamanyo*i)+coor_x, 10, 2);
+	}
+}
+
 /*********************************************************************************************
-* para:		none
-* ret:		none
-* modify:
-* comment:
 *********************************************************************************************/
 void display_tablero(void){
 	/* initial LCD controller */
@@ -705,32 +840,17 @@ void display_tablero(void){
 	Lcd_Active_Clr();
 	volatile INT8U* pucChar1 = "Pulse o introduzca (8,8)";
 	Lcd_DspAscII8x16(0,LCD_YSIZE-CHAR_VER,BLACK,pucChar1);
+	tamano_casilla = (LCD_YSIZE - CHAR_VER - CHAR_VER)/DIM;
 	if(LCD_YSIZE < LCD_XSIZE){
-		int tamano_casilla = (LCD_YSIZE - CHAR_VER - CHAR_VER)/DIM;
-		int i = 0;
-		for(i=0; i<DIM+1; i++){
-			if(i < DIM){
-				char disp[] = {i + '0', 0x0};
-				Lcd_DspAscII8x16(0,(tamano_casilla*i)+CHAR_VER,BLACK,disp);
-			}
-				Lcd_Draw_Line(CHAR_HOR, (tamano_casilla*i)+CHAR_VER, (tamano_casilla*8)+CHAR_HOR, (tamano_casilla*i)+CHAR_VER, 10, 2);
-		}
-		for(i=0; i<DIM+1; i++){
-			if(i < DIM){
-				char disp[] = {i + '0', 0x0};
-				Lcd_DspAscII8x16((tamano_casilla*i)+CHAR_HOR, 0,BLACK,disp);
-			}
-				Lcd_Draw_Line((tamano_casilla*i)+CHAR_HOR,CHAR_VER, (tamano_casilla*i)+CHAR_HOR, (tamano_casilla*8)+CHAR_VER,  10, 2);
-		}
+		display_cuadricula(CHAR_HOR, CHAR_VER, DIM, tamano_casilla, 0, 0);
 	}
-
+	dibujar_fichas_tablero(tablero, 0, 0, DIM, CHAR_HOR, CHAR_VER, tamano_casilla);
 	Lcd_Dma_Trans();
-
 }
+
 
 void reversi8()
 {
-
 	//genera_exception_dabort();
 
 	 ////////////////////////////////////////////////////////////////////
@@ -759,6 +879,7 @@ void reversi8()
     char f, c;    // fila y columna elegidas por la máquina para su movimiento
 
     init_table(tablero, candidatas);
+    display_tablero(); ////////////////////////////////////
     while (fin == 0)
     {
     	int x = timer2_leer();

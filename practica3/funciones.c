@@ -6,18 +6,18 @@
 *********************************************************************************************/
 
 /*--- include files ---*/
-#include "44blib.h"
-#include "44b.h"
-#include "tp.h"
-#include "lcd.h"
+//#include "44blib.h"
+//#include "44b.h"
+//#include "tp.h"
+//#include "lcd.h"
 
-	char yn;
+//	char yn;
 /*--- function declare ---*/
-void Main(void);
+//void Main(void);
 
 /*--- extern function ---*/
-extern void Lcd_Test();
-
+//extern void Lcd_Test();
+/*
 int LIM_ARRIBA;
 int LIM_ABAJO;
 int LIM_IZQ;
@@ -131,7 +131,8 @@ void comprobar_pulsacion(){
 	}
 
 }
-
+*/
+/*
 void esperar_mov()
 {
  //   while (*ready == 0) {};  // bucle de espera de respuestas hasta que el se modifique el valor de ready (hay que hacerlo manualmente)
@@ -214,6 +215,7 @@ void esperar_mov()
 
 
 }
+*/
 
 /*--- function code ---*/
 /*********************************************************************************************
@@ -224,13 +226,13 @@ void esperar_mov()
 * modify:
 * comment:		
 *********************************************************************************************/
+/*
 void Main(void)
 {
-    sys_init();        /* Initial 44B0X's Interrupt,Port and UART */
-    _Link();           /* Print Misc info */
-    /******************/
-	/* user interface */
-	/******************/
+
+    sys_init();
+    _Link();
+
 	Lcd_Test();
 	TS_Test();
 		
@@ -244,3 +246,4 @@ void Main(void)
 	
 	TS_close();
 }
+*/
