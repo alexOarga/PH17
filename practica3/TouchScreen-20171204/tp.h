@@ -20,6 +20,12 @@ unsigned int  Ymax;
 unsigned int  Xmin;
 unsigned int  Ymin;
 
+// para detectar cuando ha habido una pulsacion ///////////////////////////
+int contador_pulsaciones = 0;
+// guardamos ultima pulsacion
+int pulsacion_y = 0;
+int pulsacion_x = 0;
+
 void TS_Test(void);
 void TS_init(void);
 void TSInt(void);

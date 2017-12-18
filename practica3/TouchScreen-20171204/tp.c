@@ -13,6 +13,24 @@
 #include "44blib.h"
 #include "44b.h"
 
+// para detectar cuando ha habido una pulsacion //////////////////////////
+int contador_pulsaciones = 0;
+// guardamos ultima pulsacion
+int pulsacion_y = 0;
+int pulsacion_x = 0;
+
+void ultima_pulsacion(){
+	return contador_pulsaciones;	
+}
+
+void pulsacion_X_CORD(){
+	return pulsacion_x;	
+}
+
+void pulsacion_Y_CORD(){
+	return pulsacion_y;	
+}
+
 void TS_Test(void)
 {
 		Lcd_TC();
@@ -33,6 +51,9 @@ void TS_Test(void)
 ********************************************************************************************/
 void TSInt(void)
 {
+
+    
+
     int   i;
     char fail = 0;
     ULONG tmp;
@@ -73,7 +94,7 @@ void TSInt(void)
 	}
 	// read Y-position average value
 	Pt[5] = (Pt[0]+Pt[1]+Pt[2]+Pt[3]+Pt[4])/5;
-     
+
 	if(!(CheckTSP|(tmp < Xmin)|(tmp > Xmax)|(Pt[5] < Ymin)|(Pt[5] > Ymax)))   // Is valid value?
 	  {
 		tmp = 320*(tmp - Xmin)/(Xmax - Xmin);   // X - position
@@ -82,6 +103,11 @@ void TSInt(void)
 		Pt[5] = 240*(Pt[5] - Xmin)/(Ymax - Ymin);
 
       }
+
+	// asignamos ultima posicion //////////////////////////////////
+	posicion_x = tmp;
+	posicion_y = Pt[5];
+	contador_pulsacion++;
 
     if(CheckTSP)
  	/*----------- check to ensure Xmax Ymax Xmin Ymin ------------*/
@@ -102,7 +128,7 @@ void TSInt(void)
 * comment:		
 *********************************************************************************************/
 void TS_init(void)
-{
+{	
     /* enable interrupt */
 	rINTMOD=0x0;
 	rINTCON=0x1;
@@ -122,6 +148,12 @@ void TS_init(void)
     rINTMSK &=~(BIT_GLOBAL|BIT_EINT2);
 
     oneTouch = 0;
+
+    // inicializamos contador de pulsaciones /////////////////////////////////
+    contador_pulsaciones = 0;	
+    // inic ultima pulsacion
+    pulsacion_x = 0;
+    pulsacion_y = 0;
 }
 
 /*********************************************************************************************
