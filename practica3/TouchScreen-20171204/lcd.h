@@ -1,8 +1,8 @@
 /*********************************************************************************************
-* File£º	LCD.H
-* Author:	embest	
-* Desc£º	LCD common macro define and function declare
-* History:	
+* Fichero:	LCD.H
+* Autor:
+* Descrip:	definicion de madro y declaracion de funciones
+* Version:
 *********************************************************************************************/
 
 #ifndef __LCD_H__
@@ -14,9 +14,9 @@ extern "C" {
 
 #include "def.h"
 
-/*--- macro define ---*/
+/*--- define macros---*/
 
-/* screen size */
+/* tamano pantalla */
 #define TLCD_160_240		(0)
 #define VLCD_240_160		(1)
 #define CLCD_240_320		(2)
@@ -78,7 +78,7 @@ extern "C" {
 #define M5D(n)				((n) & 0x1fffff)
 #define MVAL_USED 			0
 
-/* array size */
+/* tamano array */
 #define ARRAY_SIZE_MONO 	(SCR_XSIZE/8*SCR_YSIZE)
 #define ARRAY_SIZE_GREY4   	(SCR_XSIZE/4*SCR_YSIZE)
 #define ARRAY_SIZE_GREY16  	(SCR_XSIZE/2*SCR_YSIZE)
@@ -88,7 +88,7 @@ extern "C" {
 #define CLKVAL_MONO 		(12)
 #define CLKVAL_GREY4 		(12)
 #define CLKVAL_GREY16 		(12)
-#define CLKVAL_COLOR 		(10)
+ #define CLKVAL_COLOR 		(10)
 
 #define LCD_BUF_SIZE		(SCR_XSIZE*SCR_YSIZE/2)
 #define LCD_ACTIVE_BUFFER	(0xc300000)
@@ -105,7 +105,7 @@ extern "C" {
 
 #define GUISWAP(a, b){a^=b; b^=a; a^=b;}
 
-/*--- function declare ---*/
+/*--- declaracion de funciones ---*/
 
 INT8U LCD_GetPixel(INT16U usX, INT16U usY);
 void  Lcd_Clr(void);

@@ -9,48 +9,34 @@
 #include "44blib.h"
 #include "44b.h"
 #include "tp.h"
+#include "def.h"
+#include "lcd.h"
 
-/////////////////////////////////////////////////////////////////////
-// limites de la pantalla tras calibrar
-int LIM_ARRIBA = 0;
-int LIM_ABAJO = 0;
-int LIM_IZQ = 0;
-int LIM_DCH = 0;
+#define CHAR_VER 16
+#define CHAR_HOR 8
 
-	char yn;
-/*--- function declare ---*/
-void Main(void);
+char yn;
 
-/*--- extern function ---*/
-extern void Lcd_Test();
+/*--- initial function ---*/
 
-void calibrar(){
-	int detectar_pulsacion;
+void inicializar_sistema(){
+	sys_init();         // Inicializacion de la placa, interrupciones y puertos
+	timer_init();	    // Inicializacion del temporizador
+	Eint4567_init();	// Inicializacion los pulsadores. Cada vez que se pulse se ver reflejado en el 8led
+	D8Led_init();       // Inicializacion el 8led
+	debug_init();		// Inicializacion la pila de debug
+	init_exception();	// Inicializacion el tratamiento de excepciones
+	timer2_inicializar();	// Inicializacion del timer2
+    Lcd_Init();			// Inicializacion del LCD
+    TS_init();			// Inicializacion de la TS
 
-	Lcd_DisplayString(LCD_XSIZE/2, LCD_YSIZE/2, "Pulsar '+'");
-	// ultimo contador de pulsaciones
-	detectar_pulsacion = ultima_pulsacion();
-	Lcd_DisplayChar(LCD_XSIZE/2, LCD_YSIZE, '+');
-	// mientras no varia el numero de pulsaciones
-	while(ultima_pulsacion()==detectar_pulsacion){}
-	// aqui ya ha pulsado
-	LIM_ARRIBA = pulsacion_Y_CORD();
+	/*
+	 * Calibración necesaria para el reconocimiento de la pantalla
+	 */
 
-	detectar_pulsacion = ultima_pulsacion();
-	Lcd_DisplayChar(0, LCD_YSIZE/2, '+');
-	while(ultima_pulsacion()==detectar_pulsacion){}
-	LIM_IZQ = pulsacion_X_CORD();
-
-	detectar_pulsacion = ultima_pulsacion();
-	Lcd_DisplayChar(LCD_XSIZE/2, 0, '+');
-	while(ultima_pulsacion()==detectar_pulsacion){}
-	LIM_ABAJO = pulsacion_Y_CORD();
-
-	detectar_pulsacion = ultima_pulsacion();
-	Lcd_DisplayChar(LCD_XSIZE, LCD_YSIZE/2, '+');
-	while(ultima_pulsacion()==detectar_pulsacion){}
-	LIM_DCH = pulsacion_X_CORD();
+	calibrar();
 }
+
 
 /*--- function code ---*/
 /*********************************************************************************************
@@ -63,22 +49,106 @@ void calibrar(){
 *********************************************************************************************/
 void Main(void)
 {
-    sys_init();        /* Initial 44B0X's Interrupt,Port and UART */
-    /******************/
-	/* user interface */
-	/******************/
-	//Lcd_Test();
-	//TS_Test();
-	TS_init();
-	calibrar();	
+	/*
+	 * Inicializacion necesaria para el funcionamiento del juego
+	 */
 
-	while(1)
-	 {
-	   
+	inicializar_sistema();
 
-	   //if(yn == 0x52) TS_Test();// R to reset the XY REC
-	   //else break;
-	 }
-	
+	/*
+	 * Comienzo del juego
+	 */
+
+	reversi8();
 	TS_close();
 }
+
+
+void calibrar(){
+
+	int detectar_pulsacion;
+	int calibraciones_validas=0;
+	int calibraciones[4]={0,0,0,0};
+	volatile INT8U* pucChar1 = "Pulsar los numeros";
+	volatile INT8U* pulsaciones1 = "1";
+	volatile INT8U* pulsaciones2 = "2";
+	volatile INT8U* pulsaciones3 = "3";
+	volatile INT8U* pulsaciones4 = "4";
+
+	Lcd_Clr();
+	Lcd_Active_Clr();
+	while(calibraciones_validas<2){
+		int check=4;
+
+		Lcd_DspAscII8x16(LCD_XSIZE/2, LCD_YSIZE/2,BLACK,pucChar1);
+		Lcd_Dma_Trans();
+		Delay(3000);
+		Lcd_Clr();
+		Lcd_Active_Clr();
+
+		Lcd_DspAscII8x16(LCD_XSIZE/2, LCD_YSIZE/2,BLACK,pucChar1);
+		Lcd_DspAscII8x16(LCD_XSIZE/2, 0,BLACK,pulsaciones1);
+		Lcd_Dma_Trans();
+
+		// ultimo contador de pulsaciones
+		detectar_pulsacion = ultima_pulsacion();
+		// mientras no varia el numero de pulsaciones
+		while(ultima_pulsacion()==detectar_pulsacion){}
+		// aqui ya ha pulsado
+		Lcd_Clr();
+		Lcd_Active_Clr();
+		LIM_ARRIBA_X += pulsacion_X_CORD();
+		LIM_ARRIBA_Y += pulsacion_Y_CORD();
+		if(LIM_ARRIBA_X<=0 || LIM_ARRIBA_Y<=0) check--;
+		else calibraciones[0]++;
+
+		detectar_pulsacion = ultima_pulsacion();
+		Lcd_DspAscII8x16(LCD_XSIZE/2, LCD_YSIZE/2,BLACK,pucChar1);
+		Lcd_DspAscII8x16(0, LCD_YSIZE/2,BLACK,pulsaciones2);
+		Lcd_Dma_Trans();
+
+		while(ultima_pulsacion()==detectar_pulsacion){}
+		Lcd_Clr();
+		Lcd_Active_Clr();
+		LIM_IZQ_X += pulsacion_X_CORD();
+		LIM_IZQ_Y += pulsacion_Y_CORD();
+		if(LIM_IZQ_X<=0 || LIM_IZQ_Y<=0) check--;
+		else calibraciones[1]++;
+
+		detectar_pulsacion = ultima_pulsacion();
+		Lcd_DspAscII8x16(LCD_XSIZE/2, LCD_YSIZE/2,BLACK,pucChar1);
+		Lcd_DspAscII8x16(LCD_XSIZE/2, LCD_YSIZE-CHAR_VER,BLACK,pulsaciones3);
+		Lcd_Dma_Trans();
+
+		while(ultima_pulsacion()==detectar_pulsacion){}
+		Lcd_Clr();
+		Lcd_Active_Clr();
+		LIM_ABAJO_X += pulsacion_X_CORD();
+		LIM_ABAJO_Y += pulsacion_Y_CORD();
+		if(LIM_ABAJO_X<=0 || LIM_ABAJO_Y<=0) check--;
+		else calibraciones[2]++;
+
+		detectar_pulsacion = ultima_pulsacion();
+		Lcd_DspAscII8x16(LCD_XSIZE/2, LCD_YSIZE/2,BLACK,pucChar1);
+		Lcd_DspAscII8x16(LCD_XSIZE-CHAR_VER, LCD_YSIZE/2,BLACK,pulsaciones4);
+		Lcd_Dma_Trans();
+
+		while(ultima_pulsacion()==detectar_pulsacion){}
+		Lcd_Clr();
+		Lcd_Active_Clr();
+		LIM_DCH_X += pulsacion_X_CORD();
+		LIM_DCH_Y += pulsacion_Y_CORD();
+		if(LIM_DCH_X<=0 || LIM_DCH_Y<=0) check--;
+		else calibraciones[3]++;
+
+		if(check==4) calibraciones_validas++;
+	}
+
+	Delay(6000);
+
+	Xmin = LIM_IZQ_X/calibraciones[1];
+	Xmax = LIM_DCH_X/calibraciones[3];
+	Ymin=  LIM_ABAJO_Y/calibraciones[2];
+	Ymax=  LIM_ARRIBA_Y/calibraciones[0];
+}
+

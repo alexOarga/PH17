@@ -29,7 +29,7 @@ void Delay(int time)
 // 100us resolution
 // Delay(10) -> 10*100us resolution
 {
-	int i,adjust = 0;
+	volatile int i,adjust = 0;
 	if (time == 0)
 	{
 		time = 200;

@@ -6,28 +6,20 @@
 *********************************************************************************************/
 
 /*--- include files ---*/
-#include <string.h>
+
 #include "tp.h"
 #include "lcd.h"
 #include "def.h"
-#include "44blib.h"
-#include "44b.h"
 
-// para detectar cuando ha habido una pulsacion //////////////////////////
-int contador_pulsaciones = 0;
-// guardamos ultima pulsacion
-int pulsacion_y = 0;
-int pulsacion_x = 0;
-
-void ultima_pulsacion(){
+int ultima_pulsacion(void){
 	return contador_pulsaciones;	
 }
 
-void pulsacion_X_CORD(){
+int pulsacion_X_CORD(void){
 	return pulsacion_x;	
 }
 
-void pulsacion_Y_CORD(){
+int pulsacion_Y_CORD(void){
 	return pulsacion_y;	
 }
 
@@ -95,19 +87,10 @@ void TSInt(void)
 	// read Y-position average value
 	Pt[5] = (Pt[0]+Pt[1]+Pt[2]+Pt[3]+Pt[4])/5;
 
-	if(!(CheckTSP|(tmp < Xmin)|(tmp > Xmax)|(Pt[5] < Ymin)|(Pt[5] > Ymax)))   // Is valid value?
-	  {
-		tmp = 320*(tmp - Xmin)/(Xmax - Xmin);   // X - position
-
-			
-		Pt[5] = 240*(Pt[5] - Xmin)/(Ymax - Ymin);
-
-      }
-
 	// asignamos ultima posicion //////////////////////////////////
-	posicion_x = tmp;
-	posicion_y = Pt[5];
-	contador_pulsacion++;
+	pulsacion_x = tmp;
+	pulsacion_y = Pt[5];
+	contador_pulsaciones++;
 
     if(CheckTSP)
  	/*----------- check to ensure Xmax Ymax Xmin Ymin ------------*/
@@ -130,6 +113,18 @@ void TSInt(void)
 void TS_init(void)
 {	
     /* enable interrupt */
+
+    oneTouch = 0;
+
+    // inicializamos contador de pulsaciones //
+
+    contador_pulsaciones = 0;
+
+    // inic ultima pulsacion //
+
+    pulsacion_x = 0;
+    pulsacion_y = 0;
+
 	rINTMOD=0x0;
 	rINTCON=0x1;
     rI_ISPC |= BIT_EINT2;            // clear pending_bit
@@ -145,15 +140,7 @@ void TS_init(void)
     
     rCLKCON = 0x7ff8;                // enable clock
     rADCPSR = 0x1;//0x4;             // A/D prescaler
-    rINTMSK &=~(BIT_GLOBAL|BIT_EINT2);
-
-    oneTouch = 0;
-
-    // inicializamos contador de pulsaciones /////////////////////////////////
-    contador_pulsaciones = 0;	
-    // inic ultima pulsacion
-    pulsacion_x = 0;
-    pulsacion_y = 0;
+    rINTMSK &= ~(BIT_GLOBAL|BIT_EINT2);
 }
 
 /*********************************************************************************************
@@ -167,7 +154,7 @@ void TS_init(void)
 void TS_close(void)
 {
 	/* Mask interrupt */
-	rINTMSK |=BIT_GLOBAL|BIT_EINT2;
+	rINTMSK |= (BIT_GLOBAL|BIT_EINT2);
 	pISR_EINT2 = (int)NULL;
 }
 
@@ -196,22 +183,6 @@ void Lcd_TC(void)
 	Lcd_Draw_Box(160,180,240,240,15);
 	Lcd_Draw_Box(240,180,320,240,15);
 	/* output ASCII symbol */
-	Lcd_DspAscII6x8(37,26,BLACK,"0");
-	Lcd_DspAscII6x8(117,26,BLACK,"1");
-	Lcd_DspAscII6x8(197,26,BLACK,"2");
-	Lcd_DspAscII6x8(277,26,BLACK,"3");
-	Lcd_DspAscII6x8(37,86,BLACK,"4");
-	Lcd_DspAscII6x8(117,86,BLACK,"5");
-	Lcd_DspAscII6x8(197,86,BLACK,"6");
-	Lcd_DspAscII6x8(277,86,BLACK,"7");
-	Lcd_DspAscII6x8(37,146,BLACK,"8");
-	Lcd_DspAscII6x8(117,146,BLACK,"9");
-	Lcd_DspAscII6x8(197,146,BLACK,"A");
-	Lcd_DspAscII6x8(277,146,BLACK,"B");
-	Lcd_DspAscII6x8(37,206,BLACK,"C");
-	Lcd_DspAscII6x8(117,206,BLACK,"D");
-	Lcd_DspAscII6x8(197,206,BLACK,"E");
-	Lcd_DspAscII6x8(277,206,BLACK,"F");
 	Lcd_Dma_Trans();
 	Delay(100);
 }

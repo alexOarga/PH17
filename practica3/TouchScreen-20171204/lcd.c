@@ -1,34 +1,26 @@
 /*********************************************************************************************
-* File£º	lcd.c
-* Author:	embest	
-* Desc£º	LCD control and display functions
-* History:	
+* Fichero:	lcd.c
+* Autor:
+* Descrip:	funciones de visualizacion y control LCD
+* Version:	<P6-ARM>
 *********************************************************************************************/
 
-/*--- include files ---*/
-#include "lcd.h"
+/*--- ficheros de cabecera ---*/
 #include "def.h"
 #include "44b.h"
 #include "44blib.h"
+#include "lcd.h"
 
-/*--- macro define ---*/
+/*--- definicion de macros ---*/
 #define DMA_Byte  (0)
 #define DMA_HW    (1)
 #define DMA_Word  (2)
-#define DW 		  DMA_Byte		//set ZDMA0 as half-word
+#define DW 		  DMA_Byte		//configura  ZDMA0 como media palabras
 	
-/*--- extern variables ---*/
-extern INT8U g_auc_Ascii6x8[];
+/*--- variables externas ---*/
+extern INT8U g_auc_Ascii8x16[];
 
-/*--- function code ---*/
-/*********************************************************************************************
-* name:		Lcd_Init()
-* func:		Initialize LCD Controller
-* para:		none
-* ret:		none
-* modify:
-* comment:		
-*********************************************************************************************/
+/*--- codigo de la funcion ---*/
 void Lcd_Init(void)
 {       
 	rDITHMODE=0x1223a;
@@ -50,7 +42,12 @@ void Lcd_Init(void)
 	rLCDCON1=(1)|(1<<5)|(MVAL_USED<<7)|(0x3<<8)|(0x3<<10)|(CLKVAL_GREY16<<12);
 	rBLUELUT=0xfa40;
 	//Enable LCD Logic and EL back-light.
-	rPDATE=rPDATE&0xae;
+	rPDATE=rPDATE&0x0e;
+
+	//DMA ISR
+    pISR_ZDMA0=(int)Zdma0Done;
+	rINTMSK &= ~(BIT_GLOBAL|BIT_ZDMA0);
+
 }
 
 /*********************************************************************************************
@@ -341,35 +338,52 @@ void Lcd_Draw_VLine (INT16 usY0, INT16 usY1, INT16 usX0, INT8U ucColor, INT16U u
 }
 
 /*********************************************************************************************
-* name:		Lcd_DspAscII6x8()
-* func:		display 6x8 ASCII character string 
+* name:		Lcd_DspAscII8x16()
+* func:		display 8x16 ASCII character string
 * para:		usX0,usY0 -- ASCII character string's start point coordinate
 *			ForeColor -- appointed color value
-*			pucChar   -- AsSCII character string
+*			pucChar   -- ASCII character string
 * ret:		none
 * modify:
 * comment:		
 *********************************************************************************************/
-void Lcd_DspAscII6x8(INT16U usX0, INT16U usY0,INT8U ForeColor, INT8U* pucChar)
+void Lcd_DspAscII8x16(INT16U x0, INT16U y0, INT8U ForeColor, INT8U * s)
 {
-	INT32U i,j;
-	INT8U  ucTemp;
+	INT16 i,j,k,x,y,xx;
+	INT8U qm;
+	INT32U ulOffset;
+	INT8 ywbuf[16],temp[2];
 
-	while( *pucChar != 0 )
+	for( i = 0; i < strlen((const char*)s); i++ )
 	{
-		for( i=0; i < 8; i++ )
+		if( (INT8U)*(s+i) >= 161 )
 		{
-  			ucTemp = g_auc_Ascii6x8[(*pucChar) * 8 + i];
-  			for( j = 0; j < 8; j++ )
-  			{
-  				if( (ucTemp & (0x80 >> j)) != 0 )
-  				{
-  					LCD_PutPixel(usX0 + i, usY0 + 8 - j, (INT8U)ForeColor);
-  				}  				
-  			}
+			temp[0] = *(s + i);
+			temp[1] = '\0';
+			return;
 		}
-		usX0 += XWIDTH;
-		pucChar++;
+		else
+		{
+			qm = *(s+i);
+			ulOffset = (INT32U)(qm) * 16;		//Here to be changed tomorrow
+			for( j = 0; j < 16; j ++ )
+			{
+				ywbuf[j] = g_auc_Ascii8x16[ulOffset + j];
+            }
+
+            for( y = 0; y < 16; y++ )
+            {
+            	for( x = 0; x < 8; x++ )
+               	{
+                	k = x % 8;
+			    	if( ywbuf[y]  & (0x80 >> k) )
+			       	{
+			       		xx = x0 + x + i*8;
+			       		LCD_PutPixel(xx, y + y0, (INT8U)ForeColor);
+			       	}
+			   	}
+            }
+		}
 	}
 }
 
@@ -408,7 +422,7 @@ void ReverseLine(INT32U ulHeight, INT32U ulY)
 static INT8U ucZdma0Done=1;	//When DMA is finish,ucZdma0Done is cleared to Zero
 void Zdma0Done(void)
 {
-	rI_ISPC|=BIT_ZDMA0;	    //clear pending
+	rI_ISPC=BIT_ZDMA0;	    //clear pending
 	ucZdma0Done=0;
 }
 
@@ -433,9 +447,7 @@ void Lcd_Dma_Trans(void)
 	rNCACHBE1=(((unsigned)(LCD_ACTIVE_BUFFER)>>12) <<16 )|((unsigned)(LCD_VIRTUAL_BUFFER)>>12);
   	rZDISRC0=(DW<<30)|(1<<28)|LCD_VIRTUAL_BUFFER; // inc
   	rZDIDES0=( 2<<30)  |(1<<28)|LCD_ACTIVE_BUFFER; // inc
-        
-        rZDICNT0=          ( 2<<28)  |   (1<<26)  | (LCD_BUF_SIZE) | (3<<22)  |  (0<<20);
-        
+        rZDICNT0=( 2<<28)|(1<<26)|(3<<22)|(0<<20)|(LCD_BUF_SIZE);
         //                      |            |            |             |            |---->0 = Disable DMA
         //                      |            |            |             |------------>Int. whenever transferred
         //                      |            |            |-------------------->Write time on the fly
@@ -445,8 +457,8 @@ void Lcd_Dma_Trans(void)
   	rZDICNT0 |= (1<<20);		//after ES3
     rZDCON0=0x1; // start!!!  
 
-	Delay(500);
-	//while(ucZdma0Done);		//wait for DMA finish
+	//Delay(500);
+	while(ucZdma0Done);		//wait for DMA finish
 }
 
 /*********************************************************************************************
@@ -457,47 +469,3 @@ void Lcd_Dma_Trans(void)
 * modify:
 * comment:		
 *********************************************************************************************/
-void Lcd_Test(void)
-{
-	/* initial LCD controller */
-	Lcd_Init();
-	/* clear screen */
-	Lcd_Clr();
-	Lcd_Active_Clr();
-	/* draw rectangle pattern */ 
-	Lcd_Draw_Box(0,0,80,60,15);
-	Lcd_Draw_Box(80,0,160,60,15);
-	Lcd_Draw_Box(160,0,240,60,15);
-	Lcd_Draw_Box(240,0,320,60,15);
-	Lcd_Draw_Box(0,60,80,120,15);
-	Lcd_Draw_Box(80,60,160,120,15);
-	Lcd_Draw_Box(160,60,240,120,15);
-	Lcd_Draw_Box(240,60,320,120,15);
-	Lcd_Draw_Box(0,120,80,180,15);
-	Lcd_Draw_Box(80,120,160,180,15);
-	Lcd_Draw_Box(160,120,240,180,15);
-	Lcd_Draw_Box(240,120,320,180,15);
-	Lcd_Draw_Box(0,180,80,240,15);
-	Lcd_Draw_Box(80,180,160,240,15);
-	Lcd_Draw_Box(160,180,240,240,15);
-	Lcd_Draw_Box(240,180,320,240,15);
-	/* output ASCII symbol */
-	Lcd_DspAscII6x8(37,26,BLACK,"0");
-	Lcd_DspAscII6x8(117,26,BLACK,"1");
-	Lcd_DspAscII6x8(197,26,BLACK,"2");
-	Lcd_DspAscII6x8(277,26,BLACK,"3");
-	Lcd_DspAscII6x8(37,86,BLACK,"4");
-	Lcd_DspAscII6x8(117,86,BLACK,"5");
-	Lcd_DspAscII6x8(197,86,BLACK,"6");
-	Lcd_DspAscII6x8(277,86,BLACK,"7");
-	Lcd_DspAscII6x8(37,146,BLACK,"8");
-	Lcd_DspAscII6x8(117,146,BLACK,"9");
-	Lcd_DspAscII6x8(197,146,BLACK,"A");
-	Lcd_DspAscII6x8(277,146,BLACK,"B");
-	Lcd_DspAscII6x8(37,206,BLACK,"C");
-	Lcd_DspAscII6x8(117,206,BLACK,"D");
-	Lcd_DspAscII6x8(197,206,BLACK,"E");
-	Lcd_DspAscII6x8(277,206,BLACK,"F");
-	Lcd_Dma_Trans();
-	Delay(100);
-}
