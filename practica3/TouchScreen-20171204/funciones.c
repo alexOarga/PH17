@@ -245,5 +245,27 @@ void Main(void)
 	 }
 	
 	TS_close();
+
+
 }
+
+
+void pantalla_inicial(){
+	Lcd_Clr();
+	Lcd_Active_Clr();
+	volatile INT8U* pucChar1 = "Toque la pantalla parra jugar";
+	Lcd_DspAscII8x16((LCD_XSIZE/2)-(CHAR_HOR*13),LCD_YSIZE/2,BLACK,pucChar1);
+	Lcd_Dma_Trans();
+	int detectar_pulsacion = ultima_pulsacion();
+	while(detectar_pulsacion==ultima_pulsacion() && izq_pulsado==0 && dech_pulsado==0){
+		// esperamos a que pulse
+	}
+	if(izq_pulsado==1){
+		izq_pulsado = 0;
+	}
+	if(dech_pulsado==1){
+		dech_pulsado = 0;
+	}
+}
+
 */
