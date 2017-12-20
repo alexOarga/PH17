@@ -42,6 +42,8 @@ volatile int cuenta_col = 0;
 // eleccion de casilla con botnes o pantalla
 volatile int eleccion_hecha = 0;
 volatile int tamano_casilla = 0;
+volatile int tiempo_total = 0;
+volatile int tiempo_calculos = 0;
 
 #include "button.h"
 #include "led.h"
@@ -291,6 +293,25 @@ void dibujar_fichas_tablero(char tablero[][DIM], int inicio_x, int inicio_y,
 	}
 }
 
+void display_tiempo(int coor_x, int coor_y, int lon){
+	INT8U* tiempo = "Tiempo";
+	INT8U* total = "total:";
+	INT8U* calculos = "calculos:";
+	INT8U* total_ch = (INT8U*)tiempo_total;
+	INT8U* calc_ch = (INT8U*)tiempo_calculos;
+
+	// BORRAMOS ESA ZONA DE LA PANTALLA
+	LcdClrRect(coor_x, coor_y, coor_x+(lon*CHAR_HOR), coor_y+(CHAR_VER*7), WHITE);
+
+	Lcd_DspAscII8x16(coor_x,coor_y,BLACK,tiempo);
+	Lcd_DspAscII8x16(coor_x,coor_y+CHAR_VER,BLACK,total);
+	Lcd_DspAscII8x16(coor_x, coor_y + (CHAR_VER)*2 ,BLACK,total_ch);
+
+	Lcd_DspAscII8x16(coor_x, coor_y + (CHAR_VER)*4 ,BLACK,tiempo);
+	Lcd_DspAscII8x16(coor_x, coor_y + (CHAR_VER)*5 ,BLACK,calculos);
+	Lcd_DspAscII8x16(coor_x, coor_y + (CHAR_VER)*6 ,BLACK,calc_ch);
+}
+
 void display_cuadricula(int coor_x, int coor_y, int dimension, int tamanyo, int inicio_hor, int inicio_ver){
 	char inicio_numero_hor = '0' + inicio_hor;
 	char inicio_numero_ver = '0' + inicio_ver;
@@ -330,6 +351,24 @@ void display_tablero(void){
 	}
 	dibujar_fichas_tablero(tablero, 0, 0, DIM, CHAR_HOR, CHAR_VER, tamano_casilla);
 	Lcd_Dma_Trans();
+}
+
+void pantalla_inicial(){
+	Lcd_Clr();
+	Lcd_Active_Clr();
+	volatile INT8U* pucChar1 = "Toque la pantalla parra jugar";
+	Lcd_DspAscII8x16((LCD_XSIZE/2)-(CHAR_HOR*13),LCD_YSIZE/2,BLACK,pucChar1);
+	Lcd_Dma_Trans();
+	int detectar_pulsacion = ultima_pulsacion();
+	while(detectar_pulsacion==ultima_pulsacion() && izq_pulsado==0 && dech_pulsado==0){
+		// esperamos a que pulse
+	}
+	if(izq_pulsado==1){
+		izq_pulsado = 0;
+	}
+	if(dech_pulsado==1){
+		dech_pulsado = 0;
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
