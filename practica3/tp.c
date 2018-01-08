@@ -87,28 +87,15 @@ void TSInt(void)
 	// read Y-position average value
 	Pt[5] = (Pt[0]+Pt[1]+Pt[2]+Pt[3]+Pt[4])/5;
 
-	if(!(CheckTSP|(tmp < Xmin)|(tmp > Xmax)|(Pt[5] < Ymin)|(Pt[5] > Ymax)))   // Is valid value?
-	  {
-		tmp = 320*(tmp - Xmin)/(Xmax - Xmin);   // X - position
-
-			
-		Pt[5] = 240*(Pt[5] - Xmin)/(Ymax - Ymin);
-
-      }
-
 	// asignamos ultima posicion //////////////////////////////////
 	pulsacion_x = tmp;
 	pulsacion_y = Pt[5];
 	contador_pulsaciones++;
 
-    if(CheckTSP)
- 	/*----------- check to ensure Xmax Ymax Xmin Ymin ------------*/
- 	    DesignREC(tmp,Pt[5]);
-
 	rPDATE = 0xb8;                  // should be enabled	
 	Delay(6000);                // delay to set up the next channel
 
-    rI_ISPC = BIT_EINT2;            // clear pending_bit
+    rI_ISPC |= BIT_EINT2;            // clear pending_bit
 }
 			
 /*********************************************************************************************
@@ -134,8 +121,6 @@ void TS_init(void)
     pulsacion_x = 0;
     pulsacion_y = 0;
 
-	rINTMOD=0x0;
-	rINTCON=0x1;
     rI_ISPC |= BIT_EINT2;            // clear pending_bit
 	
 	// TSPX(GPE4_Q4(-)) TSPY(GPE5_Q3(-)) TSMY(GPE6_Q2(-)) TSMX(GPE7_Q1(+)) 

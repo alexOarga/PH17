@@ -108,7 +108,9 @@ extern "C" {
 /*--- declaracion de funciones ---*/
 
 INT8U LCD_GetPixel(INT16U usX, INT16U usY);
+void  Lcd_Init(void);
 void  Lcd_Clr(void);
+void  Lcd_Active_Clr(void);
 void  Lcd_Test(void);
 void  Lcd_Dma_Trans(void);
 void  LcdVirtualToTrue(void);

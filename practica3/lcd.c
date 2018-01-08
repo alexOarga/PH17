@@ -45,8 +45,9 @@ void Lcd_Init(void)
 	rPDATE=rPDATE&0x0e;
 
 	//DMA ISR
-	rINTMSK &= ~(BIT_GLOBAL|BIT_ZDMA0);
     pISR_ZDMA0=(int)Zdma0Done;
+	rINTMSK &= ~(BIT_GLOBAL|BIT_ZDMA0);
+
 }
 
 /*********************************************************************************************
@@ -418,7 +419,7 @@ void ReverseLine(INT32U ulHeight, INT32U ulY)
 * modify:
 * comment:		
 *********************************************************************************************/
-static INT8U ucZdma0Done=1;	//When DMA is finish,ucZdma0Done is cleared to Zero
+volatile INT8U ucZdma0Done=1;	//When DMA is finish,ucZdma0Done is cleared to Zero
 void Zdma0Done(void)
 {
 	rI_ISPC=BIT_ZDMA0;	    //clear pending

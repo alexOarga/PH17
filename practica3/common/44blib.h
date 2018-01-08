@@ -39,6 +39,8 @@ void Port_Init(void);
 void Beep(int BeepStatus);
 void sys_init();// Interrupt,Port and UART
 
+volatile int delayControl;
+
 #ifdef __cplusplus
 }
 #endif

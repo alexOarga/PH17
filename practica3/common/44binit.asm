@@ -286,9 +286,9 @@ ResetHandler:
     stmia   r0,{r1-r13}
 
     #;****************************************************
-    #;*	Initialize stacks								* 
+    #;*	Initialize stacks								*
     #;****************************************************
-    ldr	    sp, =SVCStack		/* Why	*/		
+    ldr	    sp, =SVCStack		/* Why	*/
     bl	    InitStacks
 
     #;****************************************************
@@ -305,15 +305,15 @@ ResetHandler:
     #********************************************************
     LDR	    r0, =Image_RO_Limit	/* Get pointer to ROM data */
     LDR	    r1, =Image_RW_Base	/* and RAM copy	*/
-    LDR	    r3, =Image_ZI_Base	
+    LDR	    r3, =Image_ZI_Base
 	/* Zero init base => top of initialised data */
-			
+
     CMP	    r0, r1	    		/* Check that they are different */
     BEQ	    F1
 F0:
     CMP	    r1, r3				/* Copy init data                        */
     LDRCC   r2, [r0], #4        /* --> LDRCC r2, [r0] + ADD r0, r0, #4	 */
-    STRCC   r2, [r1], #4        /* --> STRCC r2, [r1] + ADD r1, r1, #4   */ 
+    STRCC   r2, [r1], #4        /* --> STRCC r2, [r1] + ADD r1, r1, #4   */
     BCC	    F0
 F1:
     LDR	    r1, =Image_ZI_Limit	/* Top of zero init segment */
@@ -328,7 +328,7 @@ F2:
 	MSR	CPSR_cxsf, r0
 	/* jump to main() */
    	BL	Main
-   	B   .	    
+   	B   .
 
 #;****************************************************
 #;*	The function for initializing stack				*

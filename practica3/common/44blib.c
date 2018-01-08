@@ -12,6 +12,7 @@
 #define HEAPEND     (_ISR_STARTADDRESS-STACKSIZE-0x500) // = 0xc7ff000
 //SVC Stack Area:0xc(e)7ff000-0xc(e)7ffaff//
 
+volatile int delayControl=0;
 extern char Image_RW_Limit[];
 volatile unsigned char *downPt;
 unsigned int fileSize;
@@ -41,7 +42,9 @@ void Delay(int time)
 		rWTCON = ((MCLK/1000000 - 1)<<8)|(2<<3)|(1<<5); // 1M/64,Watch-dog enable,nRESET,interrupt disable //
 	}
 	for (; time>0; time--)
-		for (i = 0; i < delayLoopCount; i++);
+		for (i = 0; i < delayLoopCount; i++)
+			delayControl++;
+	delayControl=-1;
 	if (adjust == 1)
 	{
 		rWTCON = ((MCLK/1000000 - 1)<<8)|(2<<3);
@@ -167,8 +170,8 @@ void free(void *pt)
 void sys_init()// Interrupt & Port
 {
 	/* enable interrupt */
-	rINTMOD = 0x0;
-	rINTCON = 0x1;
+	rINTMOD=0x0800;
+	rINTCON=0x0;
 	rI_ISPC = 0xffffffff;			/* clear all interrupt pend	*/
 	rEXTINTPND = 0xf;				// clear EXTINTPND reg
 	Port_Init();					/* Initial 44B0X's I/O port */
