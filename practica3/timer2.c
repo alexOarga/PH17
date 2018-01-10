@@ -67,3 +67,7 @@ int timer2_leer(void){
 	int actual = (rTCNTB2-rTCNTO2);
 	return ((timer2_num*rTCNTB2)+actual)*0.03;
 }
+
+int timer2_leer_nonprec(void){
+	return timer2_num*0.0021;
+}

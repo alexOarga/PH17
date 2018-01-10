@@ -47,6 +47,9 @@ volatile int tiempo_calculos = 0;
 volatile int x = 0;
 volatile int y = 0;
 
+volatile int blancas, negras; // n�mero de fichas de cada color
+volatile int fin = 0;  // fin vale 1 si el humano no ha podido mover
+
 #include "button.h"
 #include "led.h"
 #include "lcd.h"
@@ -101,9 +104,39 @@ char fila = 0, columna = 0, ready = 0;
 
 // extern int patron_volteo(char tablero[][8], int *longitud,char f, char c, char SF, char SC, char color);
 
+/* A utility function to reverse a string  */
+
+unsigned char *itoa_internal(unsigned char *buffer, size_t len, int input, int base) {
+    static const char digits[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    unsigned char *pos = buffer;
+    if (input >= base)
+        pos = itoa_internal(buffer, len, input/base, base);
+
+    if (pos-buffer < len-1)
+        *pos++ = digits[input % base];
+    return pos;
+}
+
+
+unsigned char *itoa(unsigned char *buffer, size_t len, int input, int base) {
+    unsigned char *pos = buffer;
+
+    if (base < 2 || base > 36 || len < 1)
+        return NULL;
+
+    if (input < 0)
+        *pos++ = '-';
+
+    pos = itoa_internal(pos, len, input, base);
+    *pos = '\0';
+    return buffer;
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // 0 indica CASILLA_VACIA, 1 indica FICHA_BLANCA y 2 indica FICHA_NEGRA
 // pone el tablero a cero y luego coloca las fichas centrales.
+
+
 void init_table(char tablero[][DIM], char candidatas[][DIM]) {
 	int i, j;
 
@@ -305,11 +338,11 @@ void dibujar_fichas_tablero(char tablero[][DIM], int inicio_x, int inicio_y,
 }
 
 void display_tiempo(int coor_x, int coor_y, int lon) {
-	INT8U* tiempo = "Tiempo";
-	INT8U* total = "total:";
-	INT8U* calculos = "calculos:";
-	INT16U total_ch[] = {'0' +  tiempo_total};
-	INT16U calc_ch[] = {'0' + tiempo_calculos};
+	INT8U* tiempo = (INT8U*) "Tiempo";
+	INT8U* total = (INT8U*) "total:";
+	INT8U* calculos = (INT8U*) "calculos:";
+	INT8U* total_ch = (INT8U*) "";
+	INT8U* calc_ch = (INT8U*) "";
 
 	// BORRAMOS ESA ZONA DE LA PANTALLA
 	LcdClrRect(coor_x, coor_y, coor_x + (lon * CHAR_HOR),
@@ -317,11 +350,36 @@ void display_tiempo(int coor_x, int coor_y, int lon) {
 
 	Lcd_DspAscII8x16(coor_x, coor_y, BLACK, tiempo);
 	Lcd_DspAscII8x16(coor_x, coor_y + CHAR_VER, BLACK, total);
-	Lcd_DspAscII8x16(coor_x, coor_y + (CHAR_VER) * 2, BLACK, total_ch);
+
+	volatile int time_aux = tiempo_total;
+    int cont = 0;
+    int i=0;
+    while (time_aux > 0) {
+        time_aux /= 10;
+        cont++;
+    }
+    if( cont < 1) cont=  1;
+    time_aux=tiempo_total;
+    while(cont!=0){
+		int pow = cont-1;
+		int potencia=1;
+		while (pow != 0){
+			potencia=potencia*10;
+			pow--;
+		}
+		int number = time_aux/potencia;
+		cont--;
+
+		Lcd_DspAscII8x16(coor_x+(i*CHAR_HOR), coor_y + (CHAR_VER) * 2, BLACK, itoa(total_ch,10,number,10));
+		i++;
+
+		time_aux%=potencia;
+	}
 
 	Lcd_DspAscII8x16(coor_x, coor_y + (CHAR_VER) * 4, BLACK, tiempo);
 	Lcd_DspAscII8x16(coor_x, coor_y + (CHAR_VER) * 5, BLACK, calculos);
-	Lcd_DspAscII8x16(coor_x, coor_y + (CHAR_VER) * 6, BLACK, calc_ch);
+	Lcd_DspAscII8x16(coor_x, coor_y + (CHAR_VER) * 6, BLACK,
+			itoa(calc_ch,1000,tiempo_calculos,10));
 }
 
 void display_cuadricula(int coor_x, int coor_y, int dimension, int tamanyo,
@@ -416,8 +474,7 @@ void esperar_mov() {
 
 	// actualiza el tablero
 	display_tablero();
-	tiempo_total=timer2_leer();
-	tiempo_total/=1000000;
+	tiempo_total=timer2_leer_nonprec();
 	int anterior_tiempo=tiempo_total;
 	while (eleccion_hecha == 0) {
 		////////////////////////////////////////////////////////////////////
@@ -534,8 +591,7 @@ void esperar_mov() {
 			break;
 		}
 		anterior_tiempo=tiempo_total;
-		tiempo_total=timer2_leer();
-		tiempo_total/=1000000;
+		tiempo_total=timer2_leer_nonprec();
 	}
 
 	eleccion_hecha = 0;
@@ -1015,8 +1071,7 @@ void reversi8() {
 
 	int done;     // la máquina ha conseguido mover o no
 	int move = 0; // el humano ha conseguido mover o no
-	int blancas, negras; // número de fichas de cada color
-	int fin = 0;  // fin vale 1 si el humano no ha podido mover
+  // fin vale 1 si el humano no ha podido mover
 				  // (ha introducido un valor de movimiento con algún 8)
 				  // y luego la máquina tampoco puede
 	char f, c;    // fila y columna elegidas por la máquina para su movimiento
