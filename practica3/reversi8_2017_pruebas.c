@@ -230,7 +230,14 @@ int pulsa_en_pasar(int puls_x, int puls_y) {
 }
 
 int pulsa_en_fin(int puls_x, int puls_y) {
-
+	int boton_x = CHAR_HOR + (tamano_casilla * DIM) + DIM;
+	int boton_y_abajo = (CHAR_VER*3) + (CHAR_VER*2)   +   (CHAR_VER*2);
+	int boton_y_arriba = boton_y_abajo + (CHAR_VER*2);
+	if( puls_x > boton_x && puls_y > boton_y_abajo && puls_y < boton_y_arriba){
+		return 1;
+	}else{
+		return 0;
+	}
 }
 
 int pulsa_en_tablero(int puls_x, int puls_y) {
