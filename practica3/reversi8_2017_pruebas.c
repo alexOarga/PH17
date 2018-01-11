@@ -1,8 +1,8 @@
 
-// Tamaño del tablero
+// TamaÃ±o del tablero
 #define DIM   8
 
-// Valores que puede devolver la función patron_volteo())
+// Valores que puede devolver la funciÃ³n patron_volteo())
 #define PATRON_ENCONTRADO    1
 #define NO_HAY_PATRON        0
 
@@ -47,7 +47,7 @@ volatile int tiempo_calculos = 0;
 volatile int x = 0;
 volatile int y = 0;
 
-volatile int blancas, negras; // n�mero de fichas de cada color
+volatile int blancas, negras; // número de fichas de cada color
 volatile int fin = 0;  // fin vale 1 si el humano no ha podido mover
 
 #include "button.h"
@@ -57,7 +57,7 @@ volatile int fin = 0;  // fin vale 1 si el humano no ha podido mover
 
 /////////////////////////////////////////////////////////////////////////////
 // TABLAS AUXILIARES
-// declaramos las siguientes tablas como globales para que sean más fáciles visualizarlas en el simulador
+// declaramos las siguientes tablas como globales para que sean mÃ¡s fÃ¡ciles visualizarlas en el simulador
 // __attribute__ ((aligned (8))): specifies a minimum alignment for the variable or structure field, measured in bytes, in this case 8 bytes
 
 static const char __attribute__ ((aligned (8))) tabla_valor[8][8] = { { 8, 2, 7,
@@ -71,9 +71,9 @@ const char vSF[DIM] = { -1, -1, 0, 1, 1, 1, 0, -1 };
 const char vSC[DIM] = { 0, 1, 1, 1, 0, -1, -1, -1 };
 
 //////////////////////////////////////////////////////////////////////////////////////
-// Variables globales que no deberían serlo
-// tablero, fila, columna y ready son varibles que se deberían definir como locales dentro de reversi8.
-// Sin embargo, las hemos definido como globales para que sea más fácil visualizar el tablero y las variables en la memoria
+// Variables globales que no deberÃ­an serlo
+// tablero, fila, columna y ready son varibles que se deberÃ­an definir como locales dentro de reversi8.
+// Sin embargo, las hemos definido como globales para que sea mÃ¡s fÃ¡cil visualizar el tablero y las variables en la memoria
 //////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
 // Tablero sin inicializar
@@ -98,8 +98,8 @@ char __attribute__ ((aligned (8))) tablero[DIM][DIM] = { { CASILLA_VACIA,
 
 ////////////////////////////////////////////////////////////////////
 // VARIABLES PARA INTERACCIONAR CON LA ENTRADA SALIDA
-// Pregunta: ¿hay que hacer algo con ellas para que esto funcione bien?
-// (por ejemplo añadir alguna palabra clave para garantizar que la sincronización a través de esa variable funcione)
+// Pregunta: Â¿hay que hacer algo con ellas para que esto funcione bien?
+// (por ejemplo aÃ±adir alguna palabra clave para garantizar que la sincronizaciÃ³n a travÃ©s de esa variable funcione)
 char fila = 0, columna = 0, ready = 0;
 
 // extern int patron_volteo(char tablero[][8], int *longitud,char f, char c, char SF, char SC, char color);
@@ -457,9 +457,28 @@ void pantalla_inicial() {
 	}
 }
 
+void pantalla_final(){
+		volatile INT8U* fin = "Fin de la partida";
+		volatile INT8U* fiblancas = "Fichas blancas:";
+		volatile INT8U* finegras = "Fichas negras:";
+		volatile INT8U* numblancas = "";
+		int inicio_y = (LCD_YSIZE/2);
+		int inicio_x = (LCD_XSIZE / 2) - (CHAR_HOR * 13);
+		Lcd_DspAscII8x16(inicio_x, inicio_y, BLACK,
+			fin);
+		Lcd_DspAscII8x16(inicio_x, inicio_y + CHAR_VER*2, BLACK,
+			fiblancas);
+		Lcd_DspAscII8x16(inicio_x + (CHAR_HOR*15), inicio_y + CHAR_VER*2, BLACK,
+			itoa(vacio,10,blancas,10));
+		Lcd_DspAscII8x16(inicio_x, inicio_y + CHAR_VER*3, BLACK,
+			finegras);
+		Lcd_DspAscII8x16(inicio_x + (CHAR_HOR*15), inicio_y + CHAR_VER*3, BLACK,
+			itoa(vacio,10,negras,10));
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Espera a que ready valga 1.
-// CUIDADO: si el compilador coloca esta variable en un registro, no funcionará.
+// CUIDADO: si el compilador coloca esta variable en un registro, no funcionarÃ¡.
 // Hay que definirla como "volatile" para forzar a que antes de cada uso la cargue de memoria 
 
 void esperar_mov() {
@@ -486,6 +505,9 @@ void esperar_mov() {
 		if (detectar_pulsacion != ultima_pulsacion()) {	// se ha pulsado la pantalla
 			puls_x = (pulsacion_X_CORD() - Xmin) * LCD_XSIZE / (Xmax - Xmin);
 			puls_y = (pulsacion_Y_CORD() - Ymin) * LCD_YSIZE / (Ymax - Ymin);
+			if(pulsa_en_fin(puls_x, puls_y)){
+				fin = 1;
+			}
 			if (pulsa_en_pasar(puls_x, puls_y) == 1) {
 				eleccion_hecha = 1;
 				cuenta_fila = 8;
@@ -614,16 +636,16 @@ void esperar_mov() {
 //    NI GUARDARLAS EN PILA NI RESERVAR UN ESPACIO EN LA PILA PARA ELLAS
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ////////////////////////////////////////////////////////////////////////////////
-// Devuelve el contenido de la posición indicadas por la fila y columna actual.
-// Además informa si la posición es válida y contiene alguna ficha.
+// Devuelve el contenido de la posiciÃ³n indicadas por la fila y columna actual.
+// AdemÃ¡s informa si la posiciÃ³n es vÃ¡lida y contiene alguna ficha.
 // Esto lo hace por referencia (en *posicion_valida)
-// Si devuelve un 0 no es válida o está vacia.
+// Si devuelve un 0 no es vÃ¡lida o estÃ¡ vacia.
 char ficha_valida(char tablero[][DIM], char f, char c, int *posicion_valida) {
 	char ficha;
 
 	// ficha = tablero[f][c];
 	// no puede accederse a tablero[f][c]
-	// ya que algún índice puede ser negativo
+	// ya que algÃºn Ã­ndice puede ser negativo
 
 	if ((f < DIM) && (f >= 0) && (c < DIM) && (c >= 0)
 			&& (tablero[f][c] != CASILLA_VACIA)) {
@@ -637,156 +659,156 @@ char ficha_valida(char tablero[][DIM], char f, char c, int *posicion_valida) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Devuelve el contenido de la posición indicadas por la fila y columna actual.
-// Además informa si la posición es válida y contiene alguna ficha.
+// Devuelve el contenido de la posiciÃ³n indicadas por la fila y columna actual.
+// AdemÃ¡s informa si la posiciÃ³n es vÃ¡lida y contiene alguna ficha.
 // Esto lo hace por referencia (en *posicion_valida)
-// Si devuelve un 0 no es válida o está vacia.
+// Si devuelve un 0 no es vÃ¡lida o estÃ¡ vacia.
 extern char ficha_valida_arm(char tablero[][DIM], char f, char c,
 		int *posicion_valida);
 
 ////////////////////////////////////////////////////////////////////////////////
-// Devuelve el contenido de la posición indicadas por la fila y columna actual.
-// Además informa si la posición es válida y contiene alguna ficha.
+// Devuelve el contenido de la posiciÃ³n indicadas por la fila y columna actual.
+// AdemÃ¡s informa si la posiciÃ³n es vÃ¡lida y contiene alguna ficha.
 // Esto lo hace por referencia (en *posicion_valida)
-// Si devuelve un 0 no es válida o está vacia.
+// Si devuelve un 0 no es vÃ¡lida o estÃ¡ vacia.
 extern char ficha_valida_thumb(char tablero[][DIM], char f, char c,
 		int *posicion_valida);
 
 ////////////////////////////////////////////////////////////////////////////////
-// La función patrón volteo es una función recursiva que busca el patrón de volteo
-// (n fichas del rival seguidas de una ficha del jugador actual) en una dirección determinada
-// SF y SC son las cantidades a sumar para movernos en la dirección que toque
+// La funciÃ³n patrÃ³n volteo es una funciÃ³n recursiva que busca el patrÃ³n de volteo
+// (n fichas del rival seguidas de una ficha del jugador actual) en una direcciÃ³n determinada
+// SF y SC son las cantidades a sumar para movernos en la direcciÃ³n que toque
 // color indica el color de la pieza que se acaba de colocar
-// la función devuelve PATRON_ENCONTRADO (1) si encuentra patrón y NO_HAY_PATRON (0) en caso contrario
+// la funciÃ³n devuelve PATRON_ENCONTRADO (1) si encuentra patrÃ³n y NO_HAY_PATRON (0) en caso contrario
 // FA y CA son la fila y columna a analizar
-// longitud es un parámetro por referencia. Sirve para saber la longitud del patrón que se está analizando. Se usa para saber cuantas fichas habría que voltear
+// longitud es un parÃ¡metro por referencia. Sirve para saber la longitud del patrÃ³n que se estÃ¡ analizando. Se usa para saber cuantas fichas habrÃ­a que voltear
 extern int patron_volteo_arm_c(char tablero[][DIM], int *longitud, char FA,
 		char CA, char SF, char SC, char color);
 
 ////////////////////////////////////////////////////////////////////////////////
-// La función patrón volteo es una función recursiva que busca el patrón de volteo
-// (n fichas del rival seguidas de una ficha del jugador actual) en una dirección determinada
-// SF y SC son las cantidades a sumar para movernos en la dirección que toque
+// La funciÃ³n patrÃ³n volteo es una funciÃ³n recursiva que busca el patrÃ³n de volteo
+// (n fichas del rival seguidas de una ficha del jugador actual) en una direcciÃ³n determinada
+// SF y SC son las cantidades a sumar para movernos en la direcciÃ³n que toque
 // color indica el color de la pieza que se acaba de colocar
-// la función devuelve PATRON_ENCONTRADO (1) si encuentra patrón y NO_HAY_PATRON (0) en caso contrario
+// la funciÃ³n devuelve PATRON_ENCONTRADO (1) si encuentra patrÃ³n y NO_HAY_PATRON (0) en caso contrario
 // FA y CA son la fila y columna a analizar
-// longitud es un parámetro por referencia. Sirve para saber la longitud del patrón que se está analizando. Se usa para saber cuantas fichas habría que voltear
+// longitud es un parÃ¡metro por referencia. Sirve para saber la longitud del patrÃ³n que se estÃ¡ analizando. Se usa para saber cuantas fichas habrÃ­a que voltear
 extern int patron_volteo_arm_thumb(char tablero[][DIM], int *longitud, char FA,
 		char CA, char SF, char SC, char color);
 
 ////////////////////////////////////////////////////////////////////////////////
-// La función patrón volteo es una función recursiva que busca el patrón de volteo
-// (n fichas del rival seguidas de una ficha del jugador actual) en una dirección determinada
-// SF y SC son las cantidades a sumar para movernos en la dirección que toque
+// La funciÃ³n patrÃ³n volteo es una funciÃ³n recursiva que busca el patrÃ³n de volteo
+// (n fichas del rival seguidas de una ficha del jugador actual) en una direcciÃ³n determinada
+// SF y SC son las cantidades a sumar para movernos en la direcciÃ³n que toque
 // color indica el color de la pieza que se acaba de colocar
-// la función devuelve PATRON_ENCONTRADO (1) si encuentra patrón y NO_HAY_PATRON (0) en caso contrario
+// la funciÃ³n devuelve PATRON_ENCONTRADO (1) si encuentra patrÃ³n y NO_HAY_PATRON (0) en caso contrario
 // FA y CA son la fila y columna a analizar
-// longitud es un parámetro por referencia. Sirve para saber la longitud del patrón que se está analizando. Se usa para saber cuantas fichas habría que voltear
+// longitud es un parÃ¡metro por referencia. Sirve para saber la longitud del patrÃ³n que se estÃ¡ analizando. Se usa para saber cuantas fichas habrÃ­a que voltear
 extern int patron_volteo_arm_arm(char tablero[][DIM], int *longitud, char FA,
 		char CA, char SF, char SC, char color);
 
 ////////////////////////////////////////////////////////////////////////////////
-// La función patrón volteo es una función recursiva que busca el patrón de volteo 
-// (n fichas del rival seguidas de una ficha del jugador actual) en una dirección determinada
-// SF y SC son las cantidades a sumar para movernos en la dirección que toque
+// La funciÃ³n patrÃ³n volteo es una funciÃ³n recursiva que busca el patrÃ³n de volteo 
+// (n fichas del rival seguidas de una ficha del jugador actual) en una direcciÃ³n determinada
+// SF y SC son las cantidades a sumar para movernos en la direcciÃ³n que toque
 // color indica el color de la pieza que se acaba de colocar
-// la función devuelve PATRON_ENCONTRADO (1) si encuentra patrón y NO_HAY_PATRON (0) en caso contrario
+// la funciÃ³n devuelve PATRON_ENCONTRADO (1) si encuentra patrÃ³n y NO_HAY_PATRON (0) en caso contrario
 // FA y CA son la fila y columna a analizar
-// longitud es un parámetro por referencia. Sirve para saber la longitud del patrón que se está analizando. Se usa para saber cuantas fichas habría que voltear
+// longitud es un parÃ¡metro por referencia. Sirve para saber la longitud del patrÃ³n que se estÃ¡ analizando. Se usa para saber cuantas fichas habrÃ­a que voltear
 int patron_volteo_c_c(char tablero[][DIM], int *longitud, char FA, char CA,
 		char SF, char SC, char color) {
-	int posicion_valida; // indica si la posición es valida y contiene una ficha de algún jugador
-	int patron; //indica si se ha encontrado un patrón o no
+	int posicion_valida; // indica si la posiciÃ³n es valida y contiene una ficha de algÃºn jugador
+	int patron; //indica si se ha encontrado un patrÃ³n o no
 	char casilla;   // casilla es la casilla que se lee del tablero
 	FA = FA + SF;
 	CA = CA + SC;
 
 	casilla = ficha_valida(tablero, FA, CA, &posicion_valida);
-	// mientras la casilla está en el tablero, no está vacía,
+	// mientras la casilla estÃ¡ en el tablero, no estÃ¡ vacÃ­a,
 	// y es del color rival seguimos buscando el patron de volteo
 	if ((posicion_valida == 1) && (casilla != color)) {
 		*longitud = *longitud + 1;
 		patron = patron_volteo_c_c(tablero, longitud, FA, CA, SF, SC, color);
 		return patron;
 	}
-	// si la ultima posición era válida y la ficha es del jugador actual,
-	// entonces hemos encontrado el patrón
+	// si la ultima posiciÃ³n era vÃ¡lida y la ficha es del jugador actual,
+	// entonces hemos encontrado el patrÃ³n
 	else if ((posicion_valida == 1) && (casilla == color)) {
 		if (*longitud > 0) // longitud indica cuantas fichas hay que voltear
 				{
-			return PATRON_ENCONTRADO; // si hay que voltear una ficha o más hemos encontrado el patrón
+			return PATRON_ENCONTRADO; // si hay que voltear una ficha o mÃ¡s hemos encontrado el patrÃ³n
 			//printf("PATRON_ENCONTRADO \n");
 		} else {
-			return NO_HAY_PATRON; // si no hay que voltear no hay patrón
+			return NO_HAY_PATRON; // si no hay que voltear no hay patrÃ³n
 			//printf("NO_HAY_PATRON \n");
 		}
 	}
-	// en caso contrario es que no hay patrón
+	// en caso contrario es que no hay patrÃ³n
 	else {
 		return NO_HAY_PATRON;
 		//printf("NO_HAY_PATRON \n");
 	}
 }
 ////////////////////////////////////////////////////////////////////////////////
-// La función patrón volteo es una función recursiva que busca el patrón de volteo
-// (n fichas del rival seguidas de una ficha del jugador actual) en una dirección determinada
-// SF y SC son las cantidades a sumar para movernos en la dirección que toque
+// La funciÃ³n patrÃ³n volteo es una funciÃ³n recursiva que busca el patrÃ³n de volteo
+// (n fichas del rival seguidas de una ficha del jugador actual) en una direcciÃ³n determinada
+// SF y SC son las cantidades a sumar para movernos en la direcciÃ³n que toque
 // color indica el color de la pieza que se acaba de colocar
-// la función devuelve PATRON_ENCONTRADO (1) si encuentra patrón y NO_HAY_PATRON (0) en caso contrario
+// la funciÃ³n devuelve PATRON_ENCONTRADO (1) si encuentra patrÃ³n y NO_HAY_PATRON (0) en caso contrario
 // FA y CA son la fila y columna a analizar
-// longitud es un parámetro por referencia. Sirve para saber la longitud del patrón que se está analizando. Se usa para saber cuantas fichas habría que voltear
+// longitud es un parÃ¡metro por referencia. Sirve para saber la longitud del patrÃ³n que se estÃ¡ analizando. Se usa para saber cuantas fichas habrÃ­a que voltear
 int patron_volteo_c_arm(char tablero[][DIM], int *longitud, char FA, char CA,
 		char SF, char SC, char color) {
-	int posicion_valida; // indica si la posición es valida y contiene una ficha de algún jugador
-	int patron; //indica si se ha encontrado un patrón o no
+	int posicion_valida; // indica si la posiciÃ³n es valida y contiene una ficha de algÃºn jugador
+	int patron; //indica si se ha encontrado un patrÃ³n o no
 	char casilla;   // casilla es la casilla que se lee del tablero
 	FA = FA + SF;
 	CA = CA + SC;
 
 	casilla = ficha_valida_arm(tablero, FA, CA, &posicion_valida);
-	// mientras la casilla está en el tablero, no está vacía,
+	// mientras la casilla estÃ¡ en el tablero, no estÃ¡ vacÃ­a,
 	// y es del color rival seguimos buscando el patron de volteo
 	if ((posicion_valida == 1) && (casilla != color)) {
 		*longitud = *longitud + 1;
 		patron = patron_volteo_c_arm(tablero, longitud, FA, CA, SF, SC, color);
 		return patron;
 	}
-	// si la ultima posición era válida y la ficha es del jugador actual,
-	// entonces hemos encontrado el patrón
+	// si la ultima posiciÃ³n era vÃ¡lida y la ficha es del jugador actual,
+	// entonces hemos encontrado el patrÃ³n
 	else if ((posicion_valida == 1) && (casilla == color)) {
 		if (*longitud > 0) // longitud indica cuantas fichas hay que voltear
 				{
-			return PATRON_ENCONTRADO; // si hay que voltear una ficha o más hemos encontrado el patrón
+			return PATRON_ENCONTRADO; // si hay que voltear una ficha o mÃ¡s hemos encontrado el patrÃ³n
 			//printf("PATRON_ENCONTRADO \n");
 		} else {
-			return NO_HAY_PATRON; // si no hay que voltear no hay patrón
+			return NO_HAY_PATRON; // si no hay que voltear no hay patrÃ³n
 			//printf("NO_HAY_PATRON \n");
 		}
 	}
-	// en caso contrario es que no hay patrón
+	// en caso contrario es que no hay patrÃ³n
 	else {
 		return NO_HAY_PATRON;
 		//printf("NO_HAY_PATRON \n");
 	}
 }
 ////////////////////////////////////////////////////////////////////////////////
-// La función patrón volteo es una función recursiva que busca el patrón de volteo
-// (n fichas del rival seguidas de una ficha del jugador actual) en una dirección determinada
-// SF y SC son las cantidades a sumar para movernos en la dirección que toque
+// La funciÃ³n patrÃ³n volteo es una funciÃ³n recursiva que busca el patrÃ³n de volteo
+// (n fichas del rival seguidas de una ficha del jugador actual) en una direcciÃ³n determinada
+// SF y SC son las cantidades a sumar para movernos en la direcciÃ³n que toque
 // color indica el color de la pieza que se acaba de colocar
-// la función devuelve PATRON_ENCONTRADO (1) si encuentra patrón y NO_HAY_PATRON (0) en caso contrario
+// la funciÃ³n devuelve PATRON_ENCONTRADO (1) si encuentra patrÃ³n y NO_HAY_PATRON (0) en caso contrario
 // FA y CA son la fila y columna a analizar
-// longitud es un parámetro por referencia. Sirve para saber la longitud del patrón que se está analizando. Se usa para saber cuantas fichas habría que voltear
+// longitud es un parÃ¡metro por referencia. Sirve para saber la longitud del patrÃ³n que se estÃ¡ analizando. Se usa para saber cuantas fichas habrÃ­a que voltear
 int patron_volteo_c_thumb(char tablero[][DIM], int *longitud, char FA, char CA,
 		char SF, char SC, char color) {
-	int posicion_valida; // indica si la posición es valida y contiene una ficha de algún jugador
-	int patron; //indica si se ha encontrado un patrón o no
+	int posicion_valida; // indica si la posiciÃ³n es valida y contiene una ficha de algÃºn jugador
+	int patron; //indica si se ha encontrado un patrÃ³n o no
 	char casilla;   // casilla es la casilla que se lee del tablero
 	FA = FA + SF;
 	CA = CA + SC;
 
 	casilla = ficha_valida_thumb(tablero, FA, CA, &posicion_valida);
-	// mientras la casilla está en el tablero, no está vacía,
+	// mientras la casilla estÃ¡ en el tablero, no estÃ¡ vacÃ­a,
 	// y es del color rival seguimos buscando el patron de volteo
 	if ((posicion_valida == 1) && (casilla != color)) {
 		*longitud = *longitud + 1;
@@ -794,27 +816,27 @@ int patron_volteo_c_thumb(char tablero[][DIM], int *longitud, char FA, char CA,
 				color);
 		return patron;
 	}
-	// si la ultima posición era válida y la ficha es del jugador actual,
-	// entonces hemos encontrado el patrón
+	// si la ultima posiciÃ³n era vÃ¡lida y la ficha es del jugador actual,
+	// entonces hemos encontrado el patrÃ³n
 	else if ((posicion_valida == 1) && (casilla == color)) {
 		if (*longitud > 0) // longitud indica cuantas fichas hay que voltear
 				{
-			return PATRON_ENCONTRADO; // si hay que voltear una ficha o más hemos encontrado el patrón
+			return PATRON_ENCONTRADO; // si hay que voltear una ficha o mÃ¡s hemos encontrado el patrÃ³n
 			//printf("PATRON_ENCONTRADO \n");
 		} else {
-			return NO_HAY_PATRON; // si no hay que voltear no hay patrón
+			return NO_HAY_PATRON; // si no hay que voltear no hay patrÃ³n
 			//printf("NO_HAY_PATRON \n");
 		}
 	}
-	// en caso contrario es que no hay patrón
+	// en caso contrario es que no hay patrÃ³n
 	else {
 		return NO_HAY_PATRON;
 		//printf("NO_HAY_PATRON \n");
 	}
 }
 ////////////////////////////////////////////////////////////////////////////////
-// voltea n fichas en la dirección que toque
-// SF y SC son las cantidades a sumar para movernos en la dirección que toque
+// voltea n fichas en la direcciÃ³n que toque
+// SF y SC son las cantidades a sumar para movernos en la direcciÃ³n que toque
 // color indica el color de la pieza que se acaba de colocar
 // FA y CA son la fila y columna a analizar
 void voltear(char tablero[][DIM], char FA, char CA, char SF, char SC, int n,
@@ -835,12 +857,12 @@ void error_actualizar() {
 
 ////////////////////////////////////////////////////////////////////////////////
 // comprueba si hay que actualizar alguna ficha
-// no comprueba que el movimiento realizado sea válido
+// no comprueba que el movimiento realizado sea vÃ¡lido
 // f y c son la fila y columna a analizar
 // char vSF[DIM] = {-1,-1, 0, 1, 1, 1, 0,-1};
 // char vSC[DIM] = { 0, 1, 1, 1, 0,-1,-1,-1};    
 int actualizar_tablero(char tablero[][DIM], char f, char c, char color) {
-	char SF, SC; // cantidades a sumar para movernos en la dirección que toque
+	char SF, SC; // cantidades a sumar para movernos en la direcciÃ³n que toque
 	int i;
 	int flip_c_c, flip_c_arm, flip_c_thumb, flip_arm_c, flip_arm_arm,
 			flip_arm_thumb;
@@ -908,8 +930,8 @@ void error_elegirmov() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////
-// Recorre todo el tablero comprobando en cada posición si se puede mover
-// En caso afirmativo, consulta la puntuación de la posición y si es la mejor
+// Recorre todo el tablero comprobando en cada posiciÃ³n si se puede mover
+// En caso afirmativo, consulta la puntuaciÃ³n de la posiciÃ³n y si es la mejor
 // que se ha encontrado la guarda
 // Al acabar escribe el movimiento seleccionado en f y c
 
@@ -927,24 +949,24 @@ int elegir_mov(char candidatas[][DIM], char tablero[][DIM], char *f, char *c,
 			longitud_arm_arm, longitud_arm_thumb;
 	int patron_c_c, patron_c_arm, patron_c_thumb, patron_arm_c, patron_arm_arm,
 			patron_arm_thumb;
-	char SF, SC; // cantidades a sumar para movernos en la dirección que toque
+	char SF, SC; // cantidades a sumar para movernos en la direcciÃ³n que toque
 
-	// Recorremos todo el tablero comprobando dónde podemos mover
-	// Comparamos la puntuación de los movimientos encontrados y nos quedamos con el mejor
+	// Recorremos todo el tablero comprobando dÃ³nde podemos mover
+	// Comparamos la puntuaciÃ³n de los movimientos encontrados y nos quedamos con el mejor
 	for (i = 0; i < DIM; i++) {
-		for (j = 0; j < DIM; j++) { // indica en qué casillas quizá se pueda mover
+		for (j = 0; j < DIM; j++) { // indica en quÃ© casillas quizÃ¡ se pueda mover
 			if (candidatas[i][j] == SI) {
 				if (tablero[i][j] == CASILLA_VACIA) {
 					found = 0;
 					k = 0;
 
-					// en este bucle comprobamos si es un movimiento válido
-					// (es decir si implica voltear en alguna dirección)
+					// en este bucle comprobamos si es un movimiento vÃ¡lido
+					// (es decir si implica voltear en alguna direcciÃ³n)
 					while ((found == 0) && (k < DIM)) {
-						SF = vSF[k];    // k representa la dirección que miramos
+						SF = vSF[k];    // k representa la direcciÃ³n que miramos
 						SC = vSC[k];    // 1 es norte, 2 NE, 3 E ...
 
-						// nos dice qué hay que voltear en cada dirección
+						// nos dice quÃ© hay que voltear en cada direcciÃ³n
 						longitud_c_c = longitud_c_arm = longitud_c_thumb =
 								longitud_arm_c = longitud_arm_arm =
 										longitud_arm_thumb = 0;
@@ -977,7 +999,7 @@ int elegir_mov(char candidatas[][DIM], char tablero[][DIM], char *f, char *c,
 						 }
 						 */
 						k++;
-						// si no hemos encontrado nada probamos con la siguiente dirección
+						// si no hemos encontrado nada probamos con la siguiente direcciÃ³n
 					}
 				}
 			}
@@ -985,12 +1007,12 @@ int elegir_mov(char candidatas[][DIM], char tablero[][DIM], char *f, char *c,
 	}
 	*f = (char) mf;
 	*c = (char) mc;
-	// si no se ha encontrado una posición válida devuelve -1
+	// si no se ha encontrado una posiciÃ³n vÃ¡lida devuelve -1
 	return mf;
 }
 ////////////////////////////////////////////////////////////////////////////////
-// Cuenta el número de fichas de cada color.
-// Los guarda en la dirección b (blancas) y n (negras)
+// Cuenta el nÃºmero de fichas de cada color.
+// Los guarda en la direcciÃ³n b (blancas) y n (negras)
 void contar(char tablero[][DIM], int *b, int *n) {
 	int i, j;
 
@@ -1011,7 +1033,7 @@ void contar(char tablero[][DIM], int *b, int *n) {
 
 void actualizar_candidatas(char candidatas[][DIM], char f, char c) {
 	// donde ya se ha colocado no se puede volver a colocar
-	// En las posiciones alrededor sí
+	// En las posiciones alrededor sÃ­
 	candidatas[f][c] = CASILLA_OCUPADA;
 	if (f > 0) {
 		if (candidatas[f - 1][c] != CASILLA_OCUPADA)
@@ -1044,12 +1066,12 @@ void actualizar_candidatas(char candidatas[][DIM], char f, char c) {
 // Proceso principal del juego
 // Utiliza el tablero,
 // y las direcciones en las que indica el jugador la fila y la columna
-// y la señal de ready que indica que se han actualizado fila y columna
-// tablero, fila, columna y ready son variables globales aunque deberían ser locales de reversi8,
-// la razón es que al meterlas en la pila no las pone juntas, y así jugar es más complicado.
-// en esta versión el humano lleva negras y la máquina blancas
+// y la seÃ±al de ready que indica que se han actualizado fila y columna
+// tablero, fila, columna y ready son variables globales aunque deberÃ­an ser locales de reversi8,
+// la razÃ³n es que al meterlas en la pila no las pone juntas, y asÃ­ jugar es mÃ¡s complicado.
+// en esta versiÃ³n el humano lleva negras y la mÃ¡quina blancas
 // no se comprueba que el humano mueva correctamente.
-// Sólo que la máquina realice un movimiento correcto.
+// SÃ³lo que la mÃ¡quina realice un movimiento correcto.
 extern void genera_exception_dabort();
 
 void reversi8() {
@@ -1060,7 +1082,7 @@ void reversi8() {
 
 	////////////////////////////////////////////////////////////////////
 	// Tablero candidatas: se usa para no explorar todas las posiciones del tablero
-	// sólo se exploran las que están alrededor de las fichas colocadas
+	// sÃ³lo se exploran las que estÃ¡n alrededor de las fichas colocadas
 	////////////////////////////////////////////////////////////////////
 	char __attribute__ ((aligned (8))) candidatas[DIM][DIM] =
 			{ { NO, NO, NO, NO, NO, NO, NO, NO }, { NO, NO, NO, NO, NO, NO, NO,
@@ -1069,12 +1091,12 @@ void reversi8() {
 					NO, NO, NO, NO, NO, NO, NO }, { NO, NO, NO, NO, NO, NO, NO,
 					NO }, { NO, NO, NO, NO, NO, NO, NO, NO } };
 
-	int done;     // la máquina ha conseguido mover o no
+	int done;     // la mÃ¡quina ha conseguido mover o no
 	int move = 0; // el humano ha conseguido mover o no
   // fin vale 1 si el humano no ha podido mover
-				  // (ha introducido un valor de movimiento con algún 8)
-				  // y luego la máquina tampoco puede
-	char f, c;    // fila y columna elegidas por la máquina para su movimiento
+				  // (ha introducido un valor de movimiento con algÃºn 8)
+				  // y luego la mÃ¡quina tampoco puede
+	char f, c;    // fila y columna elegidas por la mÃ¡quina para su movimiento
 
 	init_table(tablero, candidatas);
 	display_tablero(); ////////////////////////////////////
@@ -1108,4 +1130,5 @@ void reversi8() {
 
 	}
 	contar(tablero, &blancas, &negras);
+	pantalla_final();
 }
