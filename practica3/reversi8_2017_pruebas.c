@@ -264,7 +264,7 @@ int pulsa_en_pasar(int puls_x, int puls_y) {
 
 int pulsa_en_fin(int puls_x, int puls_y) {
 	int boton_x = CHAR_HOR + (tamano_casilla * DIM) + DIM;
-	int boton_y_abajo = (CHAR_VER*3) + (CHAR_VER*2)   +   (CHAR_VER*2);
+	int boton_y_abajo = CHAR_VER;
 	int boton_y_arriba = boton_y_abajo + (CHAR_VER*2);
 	if( puls_x > boton_x && puls_y > boton_y_abajo && puls_y < boton_y_arriba){
 		return 1;
@@ -376,10 +376,35 @@ void display_tiempo(int coor_x, int coor_y, int lon) {
 		time_aux%=potencia;
 	}
 
+    time_aux = tiempo_calculos;
+       cont = 0;
+        i=0;
+        while (time_aux > 0) {
+            time_aux /= 10;
+            cont++;
+        }
+        if( cont < 1) cont=  1;
+        time_aux=tiempo_calculos;
+        while(cont!=0){
+    		int pow = cont-1;
+    		int potencia=1;
+    		while (pow != 0){
+    			potencia=potencia*10;
+    			pow--;
+    		}
+    		int number = time_aux/potencia;
+    		cont--;
+
+    		Lcd_DspAscII8x16(coor_x+(i*CHAR_HOR), coor_y + (CHAR_VER) * 6, BLACK, itoa(total_ch,10,number,10));
+    		i++;
+
+    		time_aux%=potencia;
+    	}
+
+
 	Lcd_DspAscII8x16(coor_x, coor_y + (CHAR_VER) * 4, BLACK, tiempo);
 	Lcd_DspAscII8x16(coor_x, coor_y + (CHAR_VER) * 5, BLACK, calculos);
-	Lcd_DspAscII8x16(coor_x, coor_y + (CHAR_VER) * 6, BLACK,
-			itoa(calc_ch,1000,tiempo_calculos,10));
+
 }
 
 void display_cuadricula(int coor_x, int coor_y, int dimension, int tamanyo,
@@ -457,11 +482,14 @@ void pantalla_inicial() {
 }
 
 void pantalla_final(){
+		Lcd_Clr();
+		Lcd_Active_Clr();
 		volatile INT8U* fin = "Fin de la partida";
 		volatile INT8U* fiblancas = "Fichas blancas:";
 		volatile INT8U* finegras = "Fichas negras:";
-		volatile INT8U* numblancas = "";
-		int inicio_y = (LCD_YSIZE/2);
+		volatile INT8U* vacio = "";
+		volatile char numblancas[] = { '0'+blancas, 0x0 };
+		int inicio_y = (LCD_YSIZE/2) - (CHAR_VER*5);
 		int inicio_x = (LCD_XSIZE / 2) - (CHAR_HOR * 13);
 		Lcd_DspAscII8x16(inicio_x, inicio_y, BLACK,
 			fin);
@@ -473,6 +501,7 @@ void pantalla_final(){
 			finegras);
 		Lcd_DspAscII8x16(inicio_x + (CHAR_HOR*15), inicio_y + CHAR_VER*3, BLACK,
 			itoa(vacio,10,negras,10));
+		Lcd_Dma_Trans();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -506,6 +535,11 @@ void esperar_mov() {
 			puls_y = (pulsacion_Y_CORD() - Ymin) * LCD_YSIZE / (Ymax - Ymin);
 			if(pulsa_en_fin(puls_x, puls_y)){
 				fin = 1;
+				// para que salga del bucle
+				eleccion_hecha = 1;
+				cuenta_fila = 8;
+				cuenta_col = 8;
+				estado_juego = eleccion_ya_hecha;
 			}
 			if (pulsa_en_pasar(puls_x, puls_y) == 1) {
 				eleccion_hecha = 1;
@@ -876,12 +910,20 @@ int actualizar_tablero(char tablero[][DIM], char f, char c, char color) {
 		flip_c_c = flip_c_arm = flip_c_thumb = flip_arm_c = flip_arm_arm =
 				flip_arm_thumb = 0;
 
+		volatile int x = timer2_leer();
 		patron_c_c = patron_volteo_c_c(tablero, &flip_c_c, f, c, SF, SC, color);
-		//patron_c_arm = patron_volteo_c_arm(tablero,&flip_c_arm, f, c, SF, SC, color);
-		//patron_c_thumb = patron_volteo_c_thumb(tablero,&flip_c_thumb, f, c, SF, SC, color);
-		//patron_arm_c = patron_volteo_arm_c(tablero,&flip_arm_c, f, c, SF, SC, color);
-		//patron_arm_arm = patron_volteo_arm_arm(tablero,&flip_arm_arm, f, c, SF, SC, color);
-		//patron_arm_thumb = patron_volteo_arm_thumb(tablero,&flip_arm_thumb, f, c, SF, SC, color);
+		x = timer2_leer() - x;
+		patron_c_arm = patron_volteo_c_arm(tablero,&flip_c_arm, f, c, SF, SC, color);
+		x = timer2_leer() - x;
+		patron_c_thumb = patron_volteo_c_thumb(tablero,&flip_c_thumb, f, c, SF, SC, color);
+		x = timer2_leer() - x;
+		patron_arm_c = patron_volteo_arm_c(tablero,&flip_arm_c, f, c, SF, SC, color);
+		x = timer2_leer() - x;
+		patron_arm_arm = patron_volteo_arm_arm(tablero,&flip_arm_arm, f, c, SF, SC, color);
+		x = timer2_leer() - x;
+		patron_arm_thumb = patron_volteo_arm_thumb(tablero,&flip_arm_thumb, f, c, SF, SC, color);
+		x = timer2_leer() - x;
+		int y = timer2_leer();
 		/*
 		 if  (
 		 (patron_c_c == patron_c_arm == patron_c_thumb == patron_arm_c == patron_arm_arm == patron_arm_thumb == PATRON_ENCONTRADO)
@@ -1098,6 +1140,7 @@ void reversi8() {
 	char f, c;    // fila y columna elegidas por la mÃ¡quina para su movimiento
 
 	init_table(tablero, candidatas);
+	pantalla_inicial();
 	display_tablero(); ////////////////////////////////////
 	timer2_empezar();
 	while (fin == 0) {
@@ -1114,8 +1157,10 @@ void reversi8() {
 			actualizar_candidatas(candidatas, fila, columna);
 			move = 1;
 		}
+		tiempo_calculos = timer2_leer_nonprec()-tiempo_calculos;
 		// escribe el movimiento en las variables globales fila columna
 		done = elegir_mov(candidatas, tablero, &f, &c, FICHA_BLANCA);
+		tiempo_calculos = timer2_leer_nonprec()-tiempo_calculos;
 		if (done == -1) {
 			if (move == 0)
 				fin = 1;
