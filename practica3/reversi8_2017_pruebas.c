@@ -425,9 +425,8 @@ void display_tablero(void) {
 	volatile INT8U* pucChar1 = "Pulse o introduzca (8,8)";
 	Lcd_DspAscII8x16(0, LCD_YSIZE - CHAR_VER, BLACK, pucChar1);
 	tamano_casilla = (LCD_YSIZE - 2*CHAR_VER) / DIM;
-	if (LCD_YSIZE < LCD_XSIZE) {
 		display_cuadricula(CHAR_HOR, CHAR_VER, DIM, tamano_casilla, 0, 0);
-	}
+	
 	dibujar_fichas_tablero(tablero, 0, 0, DIM, CHAR_HOR, CHAR_VER,
 			tamano_casilla);
 	display_tiempo((CHAR_HOR * 4) + (tamano_casilla * DIM), CHAR_VER, 9);
