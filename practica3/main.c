@@ -26,11 +26,11 @@ void calibrar() {
 	int detectar_pulsacion;
 	int calibraciones_validas = 0;
 	int calibraciones[4] = { 0, 0, 0, 0 };
-	volatile INT8U* pucChar1 = (INT8U*) "Pulsar los numeros";
-	volatile INT8U* pulsaciones1 = (INT8U*) "1";
-	volatile INT8U* pulsaciones2 = (INT8U*) "2";
-	volatile INT8U* pulsaciones3 = (INT8U*) "3";
-	volatile INT8U* pulsaciones4 = (INT8U*) "4";
+	INT8U* pucChar1 = (INT8U*) "Pulsar los numeros";
+	INT8U* pulsaciones1 = (INT8U*) "1";
+	INT8U* pulsaciones2 = (INT8U*) "2";
+	INT8U* pulsaciones3 = (INT8U*) "3";
+	INT8U* pulsaciones4 = (INT8U*) "4";
 
 	Lcd_Clr();
 	Lcd_Active_Clr();
