@@ -136,8 +136,6 @@ unsigned char *itoa(unsigned char *buffer, size_t len, int input, int base) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // 0 indica CASILLA_VACIA, 1 indica FICHA_BLANCA y 2 indica FICHA_NEGRA
 // pone el tablero a cero y luego coloca las fichas centrales.
-
-
 void init_table(unsigned char tablero[][DIM], unsigned char candidatas[][DIM]) {
 	int i, j;
 
@@ -170,6 +168,7 @@ void init_table(unsigned char tablero[][DIM], unsigned char candidatas[][DIM]) {
 	candidatas[5][5] = SI;
 }
 
+// muestra uno de los cuadrantes del zoom
 void display_zoom(void) {
 	Lcd_Clr();
 	Lcd_Active_Clr();
@@ -179,6 +178,11 @@ void display_zoom(void) {
 	Lcd_Dma_Trans();
 }
 
+// comprueba en que casilla a pulsado el usuario.
+// recibe las coordenadas puls x, puls y
+// parpadea durante unos segundos mientras los cuales el usuario puede cancelar
+// la eleccion.
+// si no se detiene se confirma la eleccion
 void zoom_pulsar(int puls_x, int puls_y) {
 	// calcular posicion en tablero completo (8, 8)
 	int nueva_casilla_x = (puls_x - CHAR_HOR) / (tamano_casilla * 2);
@@ -252,6 +256,7 @@ void zoom_pulsar(int puls_x, int puls_y) {
 
 }
 
+// devuelve 1 si se ha pulsado en el boton pasar
 int pulsa_en_pasar(int puls_x, int puls_y) {
 	int boton_x = CHAR_HOR + (tamano_casilla * DIM) + DIM;
 	int boton_y_abajo = CHAR_VER*3;
@@ -263,6 +268,7 @@ int pulsa_en_pasar(int puls_x, int puls_y) {
 	}
 }
 
+// devuelve 1 si se ha pulsado en el boton fin
 int pulsa_en_fin(int puls_x, int puls_y) {
 	int boton_x = CHAR_HOR + (tamano_casilla * DIM) + DIM;
 	int boton_y_abajo = CHAR_VER;
@@ -274,6 +280,7 @@ int pulsa_en_fin(int puls_x, int puls_y) {
 	}
 }
 
+// devuelve 1 si se ha pulsado dentro del tablero
 int pulsa_en_tablero(int puls_x, int puls_y) {
 	if (puls_x < CHAR_HOR + (DIM * tamano_casilla)) {
 		return 1;
@@ -286,7 +293,7 @@ int pulsa_en_tablero(int puls_x, int puls_y) {
 // comprueba si se ha pulsado para hacer zoom o fuera del tablero
 void comprobar_pulsacion_zoom(int puls_x, int puls_y) {
 
-	// SI PULSA bAJO
+	// SI PULSA ABAJO
 	if (puls_y < CHAR_VER + ((DIM * tamano_casilla)) / 2) {
 		if (puls_x < CHAR_HOR + ((DIM * tamano_casilla)) / 2) {
 			x = 0;
@@ -311,6 +318,7 @@ void comprobar_pulsacion_zoom(int puls_x, int puls_y) {
 	}
 }
 
+// dibuja un rectangulo de ucColor en las coordenadas indicadas
 void dibujar_ficha(INT8U ucColor, int coor_x, int coor_y, int tamanyo) {
 	LcdClrRect(coor_x + 2, coor_y + 2, (coor_x) + (tamanyo - 2),
 			(coor_y) + (tamanyo - 2), ucColor);
@@ -338,6 +346,10 @@ void dibujar_fichas_tablero(unsigned char tablero[][DIM], int inicio_x, int inic
 	}
 }
 
+
+// elimina la zona de la pantalla donde se incluyen los tiempos
+// y actualiza con los nuevos valores de 
+// tiempo calculos y tiempo total.
 void display_tiempo(int coor_x, int coor_y, int lon) {
 	INT8U* tiempo = (INT8U*) "Tiempo";
 	INT8U* total = (INT8U*) "total:";
@@ -407,6 +419,12 @@ void display_tiempo(int coor_x, int coor_y, int lon) {
 
 }
 
+
+// muestra una cuadricula 
+// recibe:
+//	las coordenadas de la esquina superior izquierda
+//	la dimension del tablero
+//	el tamaño de una cuadricula
 void display_cuadricula(int coor_x, int coor_y, int dimension, int tamanyo,
 		int inicio_hor, int inicio_ver) {
 	char inicio_numero_hor = '0' + inicio_hor;
@@ -438,8 +456,12 @@ void display_boton(int x, int y, INT8U* msg, int leng){
 	Lcd_DspAscII8x16(x + CHAR_HOR, y + CHAR_VER/2 , BLACK, msg);
 }
 
-/*********************************************************************************************
- *********************************************************************************************/
+
+// muestra un tablero con los componentes:
+//	cuadricula
+//	fichas de tablero
+//	tiempos
+//	botones pasar y finalizar
 void display_tablero(void) {
 
 	/* clear screen */
@@ -461,6 +483,9 @@ void display_tablero(void) {
 	Lcd_Dma_Trans();
 }
 
+
+// muestra la pantalla inicial
+// la funcion termina cuando se pulsa un boton o la pantalla
 void pantalla_inicial() {
 	Lcd_Clr();
 	Lcd_Active_Clr();
@@ -481,6 +506,8 @@ void pantalla_inicial() {
 	}
 }
 
+
+// muestra la pantalla final con la puntuacion de fichas blancas y negras
 void pantalla_final(){
 		Lcd_Clr();
 		Lcd_Active_Clr();
@@ -509,9 +536,7 @@ void pantalla_final(){
 // Hay que definirla como "volatile" para forzar a que antes de cada uso la cargue de memoria 
 
 void esperar_mov() {
-	//   while (*ready == 0) {};  // bucle de espera de respuestas hasta que el se modifique el valor de ready (hay que hacerlo manualmente)
-	//   *ready = 0;  //una vez que pasemos el bucle volvemos a fijar ready a 0;
-	eleccion_hecha = 0;
+		eleccion_hecha = 0;
 	int esta_en_zoom = 0;
 	int detectar_pulsacion = ultima_pulsacion();
 	int puls_x = 0;
@@ -567,7 +592,7 @@ void esperar_mov() {
 		///////////////////////////////////////////////////////////////////
 
 		switch (estado_juego) {
-		case 0:
+		case 0:	// estado inicial
 			if (izq_pulsado == 1 || dech_pulsado == 1) {
 				izq_pulsado = 0;
 				dech_pulsado = 0;
@@ -576,7 +601,7 @@ void esperar_mov() {
 				estado_juego = espera_fila;
 			}
 			break;
-		case 1:
+		case 1:	// espera fila
 			if (izq_pulsado == 1) {
 				izq_pulsado = 0;
 				cuenta_fila = 0;
@@ -584,7 +609,7 @@ void esperar_mov() {
 				estado_juego = aumenta_fila;
 			}
 			break;
-		case 2:
+		case 2: //aumenta fila
 			if (izq_pulsado == 1) {
 				izq_pulsado = 0;
 				if (cuenta_fila < 8) {
@@ -599,7 +624,7 @@ void esperar_mov() {
 				estado_juego = espera_col;
 			}
 			break;
-		case 3:
+		case 3: // espera columna
 			if (izq_pulsado == 1) {
 				izq_pulsado = 0;
 				cuenta_col = 0;
@@ -607,7 +632,7 @@ void esperar_mov() {
 				estado_juego = aumenta_col;
 			}
 			break;
-		case 4:
+		case 4: // aumenta columna
 			if (izq_pulsado == 1) {
 				izq_pulsado = 0;
 				if (cuenta_col < 8) {
